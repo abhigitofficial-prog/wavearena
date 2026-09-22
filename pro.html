@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAVE ARENA // SYSTEM</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04040a; --panel:rgba(12,14,28,0.75);
+  --cyan:#00f3ff; --magenta:#ff00ea; --yellow:#fcee0a; --green:#00ff66; --red:#ff2d55;
+  --purple:#b06bff; --purple-lt:#d9b3ff;
+  --text:#dfe4ff; --dim:#7a7fa8;
+  --font-d:'Orbitron',sans-serif; --font-b:'Rajdhani',sans-serif; --font-m:'Share Tech Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* HIDE ALL SCROLLBARS FOR NATIVE APP FEEL */
+::-webkit-scrollbar { display: none; }
+html { scrollbar-width: none; -ms-overflow-style: none; }
+
+html, body {
+  height: 100%; width: 100%; overflow: hidden; /* Lock main window */
+}
+
+body{
+  background:var(--bg); color:var(--text); font-family:var(--font-b);
+  position:relative;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(0,243,255,.08), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(176,107,255,.10), transparent 40%),
+    linear-gradient(rgba(0,243,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,243,255,.03) 1px, transparent 1px);
+  background-size:100% 100%,100% 100%,44px 44px,44px 44px;
+}
+
+/* ATMOSPHERE (Global particles) */
+.atmo{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#particle-canvas{position:absolute;inset:0;width:100%;height:100%}
+
+/* FIXED HUD TOP */
+.hud-top{position:fixed;top:0;left:0;width:100%;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--font-m);font-size:.75rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;
+  padding:20px 40px;background:rgba(4,4,10,0.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,243,255,.15);gap:20px;flex-wrap:wrap}
+.hud-top .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);margin-right:8px;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* RIGHT NAV */
+.side-nav{position:fixed;right:30px;top:50%;transform:translateY(-50%);z-index:9500;
+  display:flex;flex-direction:column;gap:8px;padding:16px 12px;
+  background:rgba(8,10,22,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(0,243,255,.3);border-radius:8px;
+  box-shadow:0 0 50px rgba(0,0,0,.8), 0 0 30px -10px var(--cyan)}
+.side-nav::before,.side-nav::after{content:'';position:absolute;width:14px;height:14px;border:2px solid var(--cyan);opacity:.8}
+.side-nav::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.side-nav::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.nav-btn{position:relative;width:50px;height:50px;display:flex;align-items:center;justify-content:center;
+  background:transparent;border:1px solid transparent;border-radius:6px;color:var(--dim);cursor:pointer;
+  transition:all .3s cubic-bezier(.2,.8,.2,1);font-family:inherit}
+.nav-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:filter .3s ease}
+.nav-btn:hover{color:var(--cyan);background:rgba(0,243,255,.08);border-color:rgba(0,243,255,.4)}
+.nav-btn:hover svg{filter:drop-shadow(0 0 8px var(--cyan))}
+.nav-btn.active{color:var(--cyan);background:rgba(0,243,255,.15);border-color:rgba(0,243,255,.8);
+  box-shadow:0 0 22px -4px var(--cyan), inset 0 0 18px -8px var(--cyan)}
+.nav-btn.active svg{filter:drop-shadow(0 0 10px var(--cyan))}
+.nav-btn.active::after{content:'';position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+  width:4px;height:28px;border-radius:2px;background:var(--cyan);box-shadow:0 0 16px var(--cyan)}
+.nav-label{position:absolute;right:calc(100% + 16px);white-space:nowrap;
+  font-family:var(--font-m);font-size:.75rem;letter-spacing:2px;text-transform:uppercase;
+  padding:8px 16px;background:rgba(6,8,18,.98);border:1px solid var(--cyan);color:var(--cyan);
+  border-radius:4px;text-shadow:0 0 10px var(--cyan);opacity:0;transform:translateX(10px);
+  pointer-events:none;transition:all .25s ease}
+.nav-btn:hover .nav-label,.nav-btn.active .nav-label{opacity:1;transform:translateX(0)}
+
+/* ============================================================
+   PAGE CONTAINERS (Native App Style Swapping)
+   ============================================================ */
+.page {
+  position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+  display: none; /* Hidden by default */
+  flex-direction: column; align-items: center; justify-content: flex-start;
+  padding: 100px 40px 40px; /* Space for HUD */
+  overflow-y: auto; /* Internal scroll if screen is too small */
+  z-index: 10;
+}
+.page.active {
+  display: flex;
+  animation: pageFadeIn 0.4s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: scale(0.98) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Inner Wrapper to keep content centered and spacious */
+.page-inner {
+  width: 100%; max-width: 1400px;
+  margin: auto; /* centers when short, collapses to 0 when tall — no top clip */
+  display: flex; flex-direction: column;
+  flex-shrink: 0; /* prevents the flex parent from squashing it */
+}
+
+.sec-head{margin-bottom:40px;position:relative;padding-left:22px; width: 100%;}
+.sec-head::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:4px;
+  background:linear-gradient(180deg,var(--cyan),transparent);box-shadow:0 0 16px var(--cyan);border-radius:2px}
+.sec-head h2{font-family:var(--font-d);font-weight:700;font-size:clamp(2rem,4vw,3.5rem);
+  letter-spacing:.1em;text-transform:uppercase;color:#fff;text-shadow:0 0 30px rgba(0,243,255,.5)}
+.sec-head p{font-family:var(--font-m);font-size:.8rem;letter-spacing:.5em;color:var(--dim);text-transform:uppercase;margin-top:12px}
+.sec-head p b{color:var(--cyan);font-weight:400}
+
+/* ============================================================
+   HOME PAGE SPECIFIC
+   ============================================================ */
+#home { padding: 0; justify-content: center; text-align: center; }
+#home .page-inner { align-items: center; justify-content: center; height: 100%; }
+
+.hero-text { margin-bottom: 20px; }
+.hero-text h1 {
+  font-family: var(--font-d); font-weight: 900;
+  font-size: clamp(2.5rem, 7vw, 5.5rem); letter-spacing: .12em; text-transform: uppercase;
+  background: linear-gradient(90deg, var(--cyan) 0%, #fff 45%, var(--purple) 100%);
+  background-size: 200% auto; -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 30px rgba(176,107,255,.6));
+  animation: shimmer 6s linear infinite;
+}
+@keyframes shimmer { to { background-position: 200% center; } }
+.hero-text .sub {
+  font-family: var(--font-m); font-size: 1rem; letter-spacing: .5em;
+  color: var(--dim); margin-top: 16px; text-transform: uppercase;
+}
+.hero-text .sub b { color: var(--purple-lt); font-weight: 400; }
+
+/* ============================================================
+   CYBERPUNK NEON CIRCLE — 40 independent spinning rings + globe
+   (Home tab centerpiece)
+   ============================================================ */
+.circle-wrapper {
+  position: relative;
+  width: min(80vh, 700px);
+  height: min(80vh, 700px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  filter: drop-shadow(0 0 70px rgba(0,243,255,.32)) drop-shadow(0 0 130px rgba(255,0,234,.22)) drop-shadow(0 0 180px rgba(176,107,255,.2));
+}
+.cosmic-watch { position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.watch-particles { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
+
+/* every generated ring gets its own transform-origin so it spins on the
+   dead centre of the circle no matter its own radius */
+.ring-auto { transform-origin: 500px 500px; }
+@keyframes spin     { 100% { transform: rotate(360deg); } }
+@keyframes spin-rev { 100% { transform: rotate(-360deg); } }
+
+.globe-pulse { animation: globePulse 4s ease-in-out infinite; transform-origin: 500px 500px; }
+@keyframes globePulse {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: .85; }
+}
+
+/* Corner Baby Girl */
+.corner-baby {
+  position: absolute; bottom: 40px; right: 40px; width: 104px; height: 104px;
+  z-index: 100; pointer-events: none; animation: floaty 5s ease-in-out infinite;
+}
+.corner-baby .aura {
+  position: absolute; inset: -30px; z-index: 1; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(119, 0, 255, 0.267), transparent 70%);
+  filter: blur(20px); animation: auraPulse 3s ease-in-out infinite; mix-blend-mode: screen;
+}
+.corner-baby .aura-core {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,.1), transparent 70%);
+  filter: blur(12px); animation: auraPulse 2s ease-in-out infinite reverse; mix-blend-mode: screen;
+}
+.corner-baby img {
+  position: relative; z-index: 3; width: 100%; height: 100%; object-fit: contain;
+  mix-blend-mode: screen; filter: contrast(1.1) saturate(1.2) drop-shadow(0 0 20px rgba(141, 42, 255, 0.61));
+}
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+@keyframes auraPulse { 0%, 100% { opacity: 0.7; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
+
+/* ============================================================
+   KNIGHT CARDS (Container section)
+   ============================================================ */
+.arena{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr)); /* 3 side by side */
+  gap:30px;
+  perspective:1400px;
+  width:100%;
+}
+.card{
+  position:relative;background:var(--panel);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(0,243,255,.22);border-radius:6px;
+  padding:24px;transform-style:preserve-3d;
+  transition:transform .2s ease-out, box-shadow .4s ease, border-color .4s ease;
+  will-change:transform;overflow:hidden;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,var(--cyan));box-shadow:0 0 18px var(--accent,var(--cyan));z-index:4}
+.card:hover{border-color:var(--accent,var(--cyan));
+  box-shadow:0 30px 60px rgba(0,0,0,.8),0 0 36px -6px var(--accent,var(--cyan)),0 0 80px -20px var(--accent,var(--cyan))}
+.card:hover .card-img{transform:scale(1.08);filter:contrast(1.15) saturate(1.3)}
+.card:hover .name{text-shadow:0 0 18px var(--accent,var(--cyan))}
+.brk{position:absolute;width:20px;height:20px;border:2px solid var(--accent,var(--cyan));opacity:.6;z-index:5;pointer-events:none}
+.brk.tl{top:12px;left:12px;border-right:0;border-bottom:0}
+.brk.tr{top:12px;right:12px;border-left:0;border-bottom:0}
+.brk.bl{bottom:12px;left:12px;border-right:0;border-top:0}
+.brk.br{bottom:12px;right:12px;border-left:0;border-top:0}
+.rarity{position:absolute;top:16px;right:16px;z-index:6;
+  font-family:var(--font-m);font-size:.68rem;letter-spacing:2px;
+  padding:5px 12px;border-radius:3px;text-transform:uppercase;
+  background:rgba(0,0,0,.7);border:1px solid var(--accent,var(--cyan));
+  color:var(--accent,var(--cyan));text-shadow:0 0 10px var(--accent,var(--cyan))}
+.img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:4px;
+  border:1px solid rgba(255,255,255,.1);background:#07070f;margin-bottom:22px}
+.img-wrap::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 50%,rgba(4,4,10,.95) 100%);pointer-events:none}
+.card-img{width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .7s cubic-bezier(.2,.8,.2,1), filter .7s ease;
+  filter:contrast(1.08) saturate(1.15)}
+.name{font-family:var(--font-d);font-weight:700;font-size:1.4rem;letter-spacing:.05em;
+  text-transform:uppercase;color:#fff;transition:text-shadow .3s ease;margin-bottom:6px}
+.role{font-family:var(--font-m);font-size:.72rem;letter-spacing:.3em;
+  color:var(--accent,var(--magenta));text-transform:uppercase;margin-bottom:16px}
+.desc{font-size:1rem;line-height:1.6;color:var(--dim);margin-bottom:20px;min-height:76px}
+.stats{display:grid;gap:10px}
+.stat{display:grid;grid-template-columns:70px 1fr 35px;align-items:center;gap:12px;
+  font-family:var(--font-m);font-size:.7rem;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;position:relative}
+.fill{position:absolute;inset:0;width:0;
+  background:linear-gradient(90deg,var(--accent,var(--cyan)),#fff);
+  box-shadow:0 0 12px var(--accent,var(--cyan));
+  transition:width 1.6s cubic-bezier(.2,.9,.2,1)}
+.stat span:last-child{text-align:right;color:var(--accent,var(--cyan));font-size:.8rem}
+
+/* ============================================================
+   PROJECT CARDS
+   ============================================================ */
+.grid-projects{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;perspective:1200px;width:100%}
+.proj-card{
+  position:relative;background:var(--panel);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(0,243,255,.20);border-radius:6px;
+  padding:20px;
+  transition:transform .2s ease-out, box-shadow .4s ease, border-color .4s ease;
+  overflow:hidden;
+}
+.proj-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent,var(--cyan));box-shadow:0 0 16px var(--accent,var(--cyan))}
+.proj-card:hover{border-color:var(--accent,var(--cyan));
+  box-shadow:0 24px 50px rgba(0,0,0,.8),0 0 30px -8px var(--accent,var(--cyan))}
+.proj-circle-wrap{
+  position:relative;width:100%;aspect-ratio:1/1;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;border-radius:4px;
+  background:radial-gradient(circle at center, rgba(0,243,255,.08), transparent 70%);
+  border:1px solid rgba(255,255,255,.08);overflow:hidden;
+}
+.proj-circle{
+  position:absolute;width:80%;height:80%;border-radius:50%;
+  border:2px dashed var(--accent,var(--cyan));
+  opacity:.8; animation:spin 12s linear infinite;
+  box-shadow:0 0 40px -8px var(--accent,var(--cyan)) inset, 0 0 30px -12px var(--accent,var(--cyan));
+}
+.proj-circle::before{
+  content:'';position:absolute;top:-6px;left:50%;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--accent,var(--cyan));
+  box-shadow:0 0 18px var(--accent,var(--cyan)),0 0 32px var(--accent,var(--cyan));
+  transform:translateX(-50%);
+}
+.proj-circle-2{position:absolute;width:55%;height:55%;border-radius:50%;
+  border:1px dotted rgba(255,255,255,.4); animation:spin-rev 8s linear infinite;}
+.proj-circle-3{position:absolute;width:28%;height:28%;border-radius:50%;
+  border:2px solid rgba(255,255,255,.2); animation:spin 5s linear infinite;}
+.proj-letter{
+  position:relative;z-index:2;font-family:var(--font-d);font-weight:900;
+  font-size:2.8rem;letter-spacing:.05em;color:var(--accent,var(--cyan));
+  text-shadow:0 0 22px var(--accent,var(--cyan));opacity:.9;
+}
+.proj-card .name{font-size:1.15rem}
+.proj-card .role{font-size:.65rem;margin-bottom:12px}
+.proj-card .desc{font-size:.9rem;min-height:auto;margin-bottom:16px}
+.proj-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  font-family:var(--font-m);font-size:.65rem;letter-spacing:1px;
+  text-transform:uppercase;color:var(--dim);
+  border-top:1px solid rgba(255,255,255,.08);padding-top:16px;margin-top:16px}
+.proj-meta b{display:block;color:var(--accent,var(--cyan));font-size:.85rem;font-weight:400;margin-top:4px;font-family:var(--font-b)}
+
+/* ============================================================
+   PROJECT LINK + CONTAINER CLICK
+   ============================================================ */
+.proj-link{
+  position:absolute;
+  right:14px;
+  bottom:14px;
+  z-index:8;
+  font-family:var(--font-m);
+  font-size:.6rem;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--accent,var(--cyan));
+  text-decoration:none;
+  padding:3px 8px;
+  border:1px solid var(--accent,var(--cyan));
+  border-radius:3px;
+  background:rgba(4,4,10,.7);
+  transition:all .25s ease;
+  white-space:nowrap;
+}
+.proj-link:hover{
+  background:var(--accent,var(--cyan));
+  color:#000;
+  box-shadow:0 0 14px -2px var(--accent,var(--cyan));
+}
+.card[data-url]{ cursor:pointer; }
+
+/* ============================================================
+   ABOUT — CONTACT INFO
+   ============================================================ */
+.about-grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:30px;width:100%}
+.about-panel{
+  background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(0,243,255,.18);border-radius:6px;padding:36px;position:relative;overflow:hidden;
+}
+.about-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple),transparent);box-shadow:0 0 20px var(--cyan)}
+.about-panel h3{
+  font-family:var(--font-d);font-weight:700;font-size:1.2rem;
+  letter-spacing:.1em;text-transform:uppercase;color:#fff;
+  margin-bottom:22px;text-shadow:0 0 18px rgba(0,243,255,.5);
+}
+.about-panel p{font-size:1.05rem;line-height:1.8;color:var(--dim);margin-bottom:16px}
+.about-panel p b{color:var(--cyan);font-weight:600}
+.about-panel p em{color:var(--purple-lt);font-style:normal}
+.contact-list{display:flex;flex-direction:column;gap:16px}
+.contact-item{
+  display:flex;align-items:center;gap:18px;padding:18px 20px;border-radius:4px;
+  background:rgba(0,243,255,.05);border:1px solid rgba(0,243,255,.2);transition:all .3s ease;
+}
+.contact-item:hover{background:rgba(0,243,255,.12);border-color:var(--cyan);box-shadow:0 0 28px -8px var(--cyan);transform:translateX(6px);}
+.contact-icon{
+  width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--cyan);border-radius:4px;color:var(--cyan);background:rgba(0,243,255,.08);box-shadow:0 0 18px -6px var(--cyan);
+}
+.contact-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.contact-info{display:flex;flex-direction:column;min-width:0}
+.contact-info .lbl{font-family:var(--font-m);font-size:.65rem;letter-spacing:2.5px;color:var(--dim);text-transform:uppercase;margin-bottom:4px;}
+.contact-info .val{font-family:var(--font-b);font-size:1.1rem;font-weight:600;color:#fff;text-shadow:0 0 12px rgba(0,243,255,.4);word-break:break-all;}
+.contact-info a.val{color:#fff;text-decoration:none;transition:color .25s ease}
+.contact-info a.val:hover{color:var(--cyan)}
+.tags{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.tag{font-family:var(--font-m);font-size:.65rem;letter-spacing:1.5px;padding:6px 14px;border:1px solid rgba(176,107,255,.5);border-radius:20px;color:var(--purple-lt);text-transform:uppercase;background:rgba(176,107,255,.08)}
+
+/* RESPONSIVE */
+@media(max-width:1200px){ .page { padding: 100px 30px 30px; } }
+@media(max-width:900px){
+  .side-nav{right:20px;top:auto;bottom:20px;transform:none;flex-direction:row;gap:6px;padding:10px 12px;}
+  .nav-btn{width:48px;height:44px;}
+  .nav-btn.active::after{right:auto;left:50%;top:auto;bottom:-10px;transform:translateX(-50%);width:28px;height:3px;}
+  .nav-label{right:auto;left:50%;bottom:calc(100% + 14px);transform:translate(-50%,6px);}
+  .nav-btn:hover .nav-label,.nav-btn.active .nav-label{transform:translate(-50%,0);}
+  .page { padding: 90px 20px 120px; }
+  .corner-baby{bottom: 20px; right: 20px; width: 110px; height: 110px;}
+  .arena{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:22px; }
+}
+@media(max-width:520px){
+  .hud-top{font-size:.6rem;letter-spacing:1px;padding:16px 20px}
+  .arena{grid-template-columns:1fr;gap:20px}
+  .grid-projects{grid-template-columns:1fr;gap:20px}
+  .corner-baby{bottom: 10px; right: 10px; width: 68px; height: 68px;}
+  .circle-wrapper { width: 95vw; height: 95vw; margin-top: 10px;}
+}
+
+/* ============================================================
+   SPIRIT BABY — floating ghost sprite, orbiting particles, rule bubble
+   (self-contained block; all class names start with "sp-")
+   ============================================================ */
+.sp-stage{position:absolute;inset:0;z-index:3;pointer-events:none}
+
+/* particle canvases: one behind the sprite, one in front (so particles can orbit "around" it) */
+.sp-fx{position:absolute;left:50%;top:50%;width:124%;height:124%;transform:translate(-50%,-50%);pointer-events:none}
+.sp-fx-back{z-index:1}
+.sp-fx-front{z-index:3}
+
+/* the clickable sprite */
+.sp-btn{position:absolute;inset:0;z-index:2;width:100%;height:100%;padding:0;margin:0;border:0;border-radius:50%;
+  background:transparent;color:inherit;font:inherit;cursor:pointer;outline:none;
+  -webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;
+  pointer-events:auto}
+.sp-btn:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--cyan)}
+.sp-float{display:block;width:100%;height:100%;will-change:transform;
+  animation:spBob 3.4s ease-in-out infinite;transition:scale .25s ease}
+.sp-btn:hover .sp-float{scale:1.08}
+.sp-art{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 92%;
+  filter:drop-shadow(0 0 7px rgba(176,107,255,.55)) drop-shadow(0 0 16px rgba(0,243,255,.22))}
+@keyframes spBob{
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-6px) rotate(3deg)}
+}
+
+/* little life in the drawing */
+.sp-art .sp-hat,.sp-art .sp-lolli{transform-box:view-box}
+.sp-art .sp-hat{transform-origin:96px 70px;animation:spHatSway 4.2s ease-in-out infinite}
+@keyframes spHatSway{0%,100%{transform:rotate(-1.3deg)}50%{transform:rotate(1.3deg)}}
+.sp-art .sp-lolli{transform-origin:48px 148px;animation:spLolli 2.8s ease-in-out infinite}
+@keyframes spLolli{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.sp-art .sp-blush{animation:spBlush 3.2s ease-in-out infinite}
+@keyframes spBlush{0%,100%{opacity:.8}50%{opacity:1}}
+.sp-art .sp-shine{animation:spShine 4.6s ease-in-out infinite}
+@keyframes spShine{0%,100%{opacity:.18}50%{opacity:.42}}
+.sp-art .sp-zzz{transform-box:view-box;transform-origin:132px 110px;animation:spZzz 2.6s ease-in-out infinite}
+@keyframes spZzz{0%,100%{opacity:.3;transform:translate(0,3px) scale(.85)}50%{opacity:1;transform:translate(3px,-4px) scale(1.05)}}
+.sp-art .sp-eye{transform-box:fill-box;transform-origin:50% 55%;animation:spBlink 4.6s infinite}
+@keyframes spBlink{0%,93%,100%{transform:scaleY(1)}96.5%{transform:scaleY(.08)}}
+
+/* ---- face moods: only the active one is shown ---- */
+.sp-art .sp-mood{display:none}
+.sp-art[data-mood="happy"] .sp-m-happy,
+.sp-art[data-mood="wink"] .sp-m-wink,
+.sp-art[data-mood="love"] .sp-m-love,
+.sp-art[data-mood="star"] .sp-m-star,
+.sp-art[data-mood="uwu"] .sp-m-uwu,
+.sp-art[data-mood="surprised"] .sp-m-surprised,
+.sp-art[data-mood="sleepy"] .sp-m-sleepy,
+.sp-art[data-mood="cool"] .sp-m-cool,
+.sp-art[data-mood="dizzy"] .sp-m-dizzy,
+.sp-art[data-mood="laugh"] .sp-m-laugh{display:block}
+.sp-art .sp-face{transition:none}
+
+/* happy squish when clicked */
+.sp-art.sp-boop{animation:spBoop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes spBoop{
+  0%{transform:scale(1,1)}
+  25%{transform:scale(1.14,.86)}
+  55%{transform:scale(.93,1.1)}
+  100%{transform:scale(1,1)}
+}
+
+/* rule bubble — sits to the left of the sprite, clear of the side nav */
+.sp-bubble{position:absolute;z-index:4;right:calc(100% + 16px);bottom:34%;
+  width:max-content;max-width:250px;padding:14px 18px 15px;text-align:left;
+  background:rgba(6,8,18,.96);border:1px solid var(--purple);border-radius:6px;
+  box-shadow:0 0 30px -6px var(--purple),0 10px 40px rgba(0,0,0,.7);
+  opacity:0;visibility:hidden;transform:translateX(10px) scale(.9);transform-origin:100% 70%;
+  pointer-events:none;
+  transition:opacity .25s ease,transform .3s cubic-bezier(.2,1.4,.4,1),visibility 0s linear .3s}
+.sp-bubble.show{opacity:1;visibility:visible;transform:none;
+  transition:opacity .25s ease,transform .3s cubic-bezier(.2,1.4,.4,1),visibility 0s}
+.sp-bubble::before,.sp-bubble::after{content:'';position:absolute;width:12px;height:12px;border:2px solid var(--cyan);opacity:.85}
+.sp-bubble::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.sp-bubble::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.sp-tag{display:block;margin-bottom:6px;font-family:var(--font-m);font-size:.62rem;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--cyan);text-shadow:0 0 10px rgba(0,243,255,.6)}
+.sp-tag b{color:var(--purple-lt);font-weight:400}
+.sp-bubble p{margin:0;font-family:var(--font-b);font-weight:500;font-size:1.05rem;line-height:1.35;color:var(--text)}
+.sp-tip{position:absolute;right:-7px;bottom:28px;width:12px;height:12px;background:rgba(6,8,18,.96);
+  border-top:1px solid var(--purple);border-right:1px solid var(--purple);transform:rotate(45deg)}
+
+@media(max-width:900px){
+  /* On small screens the nav bar sits along the bottom-right, right on top of this slot, so the spirit
+     couldn't be tapped. Lift the slot just above the nav bar (delete this one line to undo). */
+  .corner-baby{bottom:100px}
+  /* ...and the bubble goes above the sprite instead of beside it */
+  .sp-bubble{right:0;bottom:calc(100% + 16px);max-width:min(250px,calc(100vw - 40px));
+    transform:translateY(10px) scale(.9);transform-origin:90% 100%}
+  .sp-tip{right:46px;bottom:-7px;transform:rotate(135deg)}
+}
+@media(max-width:520px){
+  .sp-bubble{padding:12px 15px 13px}
+  .sp-bubble p{font-size:.98rem}
+  .sp-tip{right:34px}
+}
+@media (prefers-reduced-motion:reduce){
+  .sp-float,.sp-art .sp-hat,.sp-art .sp-lolli,.sp-art .sp-blush,.sp-art .sp-shine,.sp-art .sp-zzz,.sp-art .sp-eye{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- FIXED HUD TOP -->
+<div class="hud-top">
+  <div><span class="dot"></span>SYS.ONLINE // AURA_LINK: ACTIVE</div>
+  <div>NODE <b style="color:var(--purple-lt)">00-P</b> // SPIRIT UNIT</div>
+  <div>RESONANCE <b style="color:var(--green)">99.7%</b></div>
+</div>
+
+<!-- ATMOSPHERE (Global particles) -->
+<div class="atmo">
+  <canvas id="particle-canvas"></canvas>
+</div>
+
+<!-- RIGHT NAV -->
+<nav class="side-nav" aria-label="Page navigation">
+  <button class="nav-btn active" data-target="home" aria-label="Home">
+    <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg>
+    <span class="nav-label">Home</span>
+  </button>
+  <button class="nav-btn" data-target="containers" aria-label="Containers">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5"/><rect x="13.5" y="3" width="7.5" height="7.5"/><rect x="3" y="13.5" width="7.5" height="7.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5"/></svg>
+    <span class="nav-label">Containers</span>
+  </button>
+  <button class="nav-btn" data-target="projects" aria-label="Projects">
+    <svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/><path d="M3 7V5h6l2 2"/></svg>
+    <span class="nav-label">Projects</span>
+  </button>
+  <button class="nav-btn" data-target="about" aria-label="About">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+    <span class="nav-label">About</span>
+  </button>
+</nav>
+
+<!-- ============================================================
+     PAGE 1: HOME (Default)
+     ============================================================ -->
+<section id="home" class="page active">
+  <div class="page-inner">
+    <div class="hero-text">
+      <h1>Wave Arena</h1>
+      <p class="sub">// Awaken The <b>Spirit Core</b> //</p>
+    </div>
+
+    <div class="circle-wrapper">
+      <svg class="cosmic-watch" id="circleSvg" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <filter id="glowStrong" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="9" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <radialGradient id="watchGold" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#eafcff"/>
+            <stop offset="30%" stop-color="#5df4ff"/>
+            <stop offset="62%" stop-color="#b06bff"/>
+            <stop offset="100%" stop-color="#ff00ea"/>
+          </radialGradient>
+          <radialGradient id="globeFill" cx="38%" cy="32%" r="70%">
+            <stop offset="0%" stop-color="#123a4a"/>
+            <stop offset="55%" stop-color="#071224"/>
+            <stop offset="100%" stop-color="#020208"/>
+          </radialGradient>
+        </defs>
+
+        <!-- 40 independent neon rings, injected here by JS -->
+        <g id="ringsLayer"></g>
+
+        <!-- CYBERPUNK NEON GLOBE, dead centre -->
+        <g id="globeGroup">
+          <circle class="globe-pulse" cx="500" cy="500" r="158" fill="url(#globeFill)" filter="url(#glow)"/>
+          <g id="globeGrid"></g>
+          <circle cx="500" cy="500" r="150" fill="none" stroke="url(#watchGold)" stroke-width="2.6" filter="url(#glowStrong)"/>
+          <g id="globeBlips"></g>
+        </g>
+      </svg>
+      <canvas class="watch-particles" id="watchParticles"></canvas>
+    </div>
+
+    <!-- Small Corner Baby Guard -->
+    <div class="corner-baby">
+      <div class="aura"></div>
+      <div class="aura-core"></div>
+      <div class="sp-stage" id="spiritStage">
+        <canvas class="sp-fx sp-fx-back" aria-hidden="true"></canvas>
+        <button class="sp-btn" id="spiritBtn" type="button" aria-label="Spirit Baby — click to see a rule">
+          <span class="sp-float">
+            <svg class="sp-art" data-mood="happy" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="spBody" x1=".2" y1="0" x2=".8" y2="1">
+                <stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#ffffff"/><stop offset="1" stop-color="#e9f0f8"/>
+              </linearGradient>
+              <linearGradient id="spHat" x1=".1" y1="0" x2=".9" y2="1">
+                <stop offset="0" stop-color="#90aacb"/><stop offset=".5" stop-color="#7591b7"/><stop offset="1" stop-color="#5d7ba3"/>
+              </linearGradient>
+              <linearGradient id="spBrim" x1=".1" y1="0" x2=".9" y2="1">
+                <stop offset="0" stop-color="#8099bd"/><stop offset="1" stop-color="#5a77a0"/>
+              </linearGradient>
+              <linearGradient id="spBand" x1="0" y1="0" x2="1" y2=".5">
+                <stop offset="0" stop-color="#fbc5cd"/><stop offset=".55" stop-color="#f4aabb"/><stop offset="1" stop-color="#d88ba7"/>
+              </linearGradient>
+              <radialGradient id="spCandy" cx=".34" cy=".28" r=".85">
+                <stop offset="0" stop-color="#ffd9e6"/><stop offset=".5" stop-color="#f7a4c0"/><stop offset="1" stop-color="#df7ba1"/>
+              </radialGradient>
+              <clipPath id="spCpCone"><path d="M74,54 C82,36 102,17 121,9 C126,6 132,8 135,14 C143,24 156,32 166,44 C170,49 170,56 167,61 C163,55 155,47 146,44 C146,54 146,62 145,74 C118,78 90,74 74,68 Z"/></clipPath>
+              <clipPath id="spCpMouth"><path d="M77.5,96.5 C80,100 89,100 91,95.5 C92.5,104 88.5,108 84,108 C79.5,108 76,104 77.5,96.5 Z"/></clipPath>
+              <clipPath id="spCpMouthBig"><path d="M74.5,94 C78.5,100.5 89.5,100.5 93.5,93.5 C96.5,105.5 90,113 84,113 C78,113 71.5,105.5 74.5,94 Z"/></clipPath>
+            </defs>
+
+            <path fill="url(#spBody)" stroke="#20201f" stroke-width="2.8" stroke-linejoin="round" d="
+            M95,44 C68,44 48,66 45.5,96 C44.5,118 44,132 45,146
+            C46,159 49,170 56,178 C62,185 68,189 75,189.5
+            C80.5,190 84,186.5 86.5,183 C89.5,179 92.5,178.5 95.5,181.5
+            C98.5,184.5 101,188 105,189.5 C110,191 114.5,188 117,183.5
+            C119.5,179 122.5,178 125.5,180.5 C129,183.5 132,186 136,184
+            C140,182 143,177.5 145,172
+            C154,173 166,172 174,167 C179,163.5 178.5,157 172,151.5
+            C162,143 149,133 146.5,119 C144,103 144,80 138,64
+            C131,48 116,44 95,44 Z"/>
+            <g fill="#d6e1f0">
+              <path d="M63,167 C65,157 68,152 71.5,148 C69.5,157 68.5,168 68,178 C65.5,174 63.5,170.5 63,167 Z"/>
+              <path d="M96,165 C98,156 101,151 104.5,147 C102.5,156 101.5,166 101,176 C98.5,172 96.5,168.5 96,165 Z"/>
+              <path d="M128,161 C130,152 133,147 136.5,143 C134.5,152 133.5,161 133,171 C130.5,167 128.5,164.5 128,161 Z"/>
+              <path d="M151,158 C156.5,150.5 161,146 166.5,143 C168.5,151 167.5,159 164.5,164.5 C160,162.5 155,160.5 151,158 Z" opacity=".85"/>
+              <path d="M45,107 C44.6,122 44.6,136 46,148 C47.8,144 48.6,132 48.6,119.5 C48.6,113 47,108.8 45,107 Z" opacity=".7"/>
+            </g>
+            <path fill="none" stroke="#20201f" stroke-width="2.4" stroke-linecap="round" d="M115,127 C110,136 111,146 122,148"/>
+
+              <g class="sp-blush">
+                <ellipse cx="56.5" cy="103.5" rx="8.6" ry="4.8" fill="#f9b6bd" opacity=".95"/>
+                <ellipse cx="113.5" cy="102" rx="8.6" ry="4.8" fill="#f9b6bd" opacity=".95"/>
+              </g>
+            <g class="sp-face">
+              <g class="sp-mood sp-m-happy">
+                <g class="sp-eye"><ellipse cx="65" cy="89.3" rx="6.1" ry="10.2" fill="#1d1a19" transform="rotate(-4 65 89.3)"/><circle cx="67" cy="83.6" r="2.1" fill="#fff"/></g>
+                <g class="sp-eye"><ellipse cx="105.1" cy="90.9" rx="6.2" ry="10.5" fill="#1d1a19" transform="rotate(4 105.1 90.9)"/><circle cx="103.6" cy="83.8" r="2" fill="#fff"/></g>
+                <path fill="#1e2b45" stroke="#20201f" stroke-width="2.3" stroke-linejoin="round" d="M77.5,96.5 C80,100 89,100 91,95.5 C92.5,104 88.5,108 84,108 C79.5,108 76,104 77.5,96.5 Z"/>
+                <g clip-path="url(#spCpMouth)"><ellipse cx="84" cy="107" rx="7.5" ry="5.6" fill="#f4718f"/></g>
+              </g>
+              <g class="sp-mood sp-m-wink">
+                <g class="sp-eye"><ellipse cx="65" cy="89.3" rx="6.1" ry="10.2" fill="#1d1a19" transform="rotate(-4 65 89.3)"/><circle cx="67" cy="83.6" r="2.1" fill="#fff"/></g>
+                <path fill="none" stroke="#1d1a19" stroke-width="3.4" stroke-linecap="round" d="M97.9,94.8 C100.9,86 109.3,86 112.3,94.8"/>
+                <path fill="#ffe27a" stroke="#e0a63c" stroke-width="1" d="M124.0,107.4 L125.4,111.0 L129.3,111.3 L126.3,113.8 L127.3,117.5 L124.0,115.5 L120.7,117.5 L121.7,113.8 L118.7,111.3 L122.6,111.0 Z"/>
+                <path fill="#1e2b45" stroke="#20201f" stroke-width="2.3" stroke-linejoin="round" d="M77.5,96.5 C80,100 89,100 91,95.5 C92.5,104 88.5,108 84,108 C79.5,108 76,104 77.5,96.5 Z"/>
+                <g clip-path="url(#spCpMouth)"><ellipse cx="84" cy="107" rx="7.5" ry="5.6" fill="#f4718f"/></g>
+              </g>
+              <g class="sp-mood sp-m-love">
+                <path fill="#ff5f89" stroke="#d63e69" stroke-width="1.1" d="M65.0,96.9 C56.0,89.8 57.0,81.8 62.2,82.9 C64.0,83.6 65.0,85.1 65.0,86.3 C65.0,85.1 66.0,83.6 67.8,82.9 C73.0,81.8 74.0,89.8 65.0,96.9 Z"/>
+                <path fill="#ff5f89" stroke="#d63e69" stroke-width="1.1" d="M105.1,98.5 C96.1,91.4 97.1,83.4 102.3,84.5 C104.1,85.2 105.1,86.7 105.1,87.9 C105.1,86.7 106.1,85.2 107.9,84.5 C113.1,83.4 114.1,91.4 105.1,98.5 Z"/>
+                <path fill="#1e2b45" stroke="#20201f" stroke-width="2.4" stroke-linejoin="round" d="M74.5,94 C78.5,100.5 89.5,100.5 93.5,93.5 C96.5,105.5 90,113 84,113 C78,113 71.5,105.5 74.5,94 Z"/>
+                <g clip-path="url(#spCpMouthBig)"><ellipse cx="84" cy="112" rx="9" ry="6.6" fill="#f4718f"/></g>
+              </g>
+              <g class="sp-mood sp-m-star">
+                <path fill="#ffd93d" stroke="#20201f" stroke-width="1.7" stroke-linejoin="round" d="M65.0,80.3 L67.3,86.1 L73.6,86.5 L68.8,90.5 L70.3,96.6 L65.0,93.3 L59.7,96.6 L61.2,90.5 L56.4,86.5 L62.7,86.1 Z"/>
+                <path fill="#ffd93d" stroke="#20201f" stroke-width="1.7" stroke-linejoin="round" d="M105.1,81.9 L107.4,87.7 L113.7,88.1 L108.9,92.1 L110.4,98.2 L105.1,94.9 L99.8,98.2 L101.3,92.1 L96.5,88.1 L102.8,87.7 Z"/>
+                <path fill="#1e2b45" stroke="#20201f" stroke-width="2.4" stroke-linejoin="round" d="M74.5,94 C78.5,100.5 89.5,100.5 93.5,93.5 C96.5,105.5 90,113 84,113 C78,113 71.5,105.5 74.5,94 Z"/>
+                <g clip-path="url(#spCpMouthBig)"><ellipse cx="84" cy="112" rx="9" ry="6.6" fill="#f4718f"/></g>
+              </g>
+              <g class="sp-mood sp-m-uwu">
+                <path fill="none" stroke="#1d1a19" stroke-width="3.4" stroke-linecap="round" d="M57.8,93.2 C60.8,84.4 69.2,84.4 72.2,93.2"/>
+                <path fill="none" stroke="#1d1a19" stroke-width="3.4" stroke-linecap="round" d="M97.9,94.8 C100.9,86 109.3,86 112.3,94.8"/>
+                <path fill="none" stroke="#20201f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M77.6,99.5 C79.6,104.6 83,104.6 84.2,100.6 C85.4,104.6 88.8,104.6 90.8,99.5"/>
+              </g>
+              <g class="sp-mood sp-m-surprised">
+                <g class="sp-eye"><ellipse cx="65" cy="89" rx="7.3" ry="11.4" fill="#1d1a19"/><circle cx="67.4" cy="82.6" r="2.6" fill="#fff"/><circle cx="62.6" cy="94.5" r="1.4" fill="#fff" opacity=".9"/></g>
+                <g class="sp-eye"><ellipse cx="105.1" cy="90.6" rx="7.4" ry="11.6" fill="#1d1a19"/><circle cx="103.2" cy="84.2" r="2.5" fill="#fff"/><circle cx="108.2" cy="96.2" r="1.4" fill="#fff" opacity=".9"/></g>
+                <ellipse cx="84.2" cy="102.5" rx="4.8" ry="6.2" fill="#1e2b45" stroke="#20201f" stroke-width="2.2"/>
+              </g>
+              <g class="sp-mood sp-m-sleepy">
+                <path fill="none" stroke="#1d1a19" stroke-width="3.2" stroke-linecap="round" d="M57.8,86.6 C60.8,95.4 69.2,95.4 72.2,86.6"/>
+                <path fill="none" stroke="#1d1a19" stroke-width="3.2" stroke-linecap="round" d="M97.9,88.2 C100.9,97 109.3,97 112.3,88.2"/>
+                <ellipse cx="84.2" cy="102.5" rx="3.6" ry="4.6" fill="#1e2b45" stroke="#20201f" stroke-width="2"/>
+                <g class="sp-zzz" fill="none" stroke="#9fc4e8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M124,112 L132,112 L124,120 L132,120"/>
+                  <path d="M137,99 L143,99 L137,105 L143,105"/>
+                </g>
+              </g>
+              <g class="sp-mood sp-m-cool">
+                <path fill="#1d1a19" d="M58.9,88 C58.9,96.5 61.6,99.8 65,99.8 C68.4,99.8 71.1,96.5 71.1,88 Z"/>
+                <path fill="none" stroke="#1d1a19" stroke-width="3" stroke-linecap="round" d="M57.6,87.6 C61.4,85.6 68.6,85.6 72.4,87.6"/>
+                <path fill="#1d1a19" d="M98.9,89.6 C98.9,98.1 101.7,101.4 105.1,101.4 C108.5,101.4 111.3,98.1 111.3,89.6 Z"/>
+                <path fill="none" stroke="#1d1a19" stroke-width="3" stroke-linecap="round" d="M97.7,89.2 C101.5,87.2 108.7,87.2 112.5,89.2"/>
+                <path fill="none" stroke="#20201f" stroke-width="2.7" stroke-linecap="round" d="M76.6,99.6 C81.6,106.6 89.6,104.6 92.4,97.6"/>
+              </g>
+              <g class="sp-mood sp-m-dizzy">
+                <g fill="none" stroke="#1d1a19" stroke-width="2.3" stroke-linecap="round">
+                  <path d="M65,89.3 C67.3,88.7 68.6,90.6 67.7,92.6 C66.6,95 63,95.1 61.3,92.6 C59.2,89.5 61.4,85.1 65.2,84.5 C69.8,83.8 73.4,88.1 72.5,93"/>
+                  <path d="M105.1,90.9 C107.4,90.3 108.7,92.2 107.8,94.2 C106.7,96.6 103.1,96.7 101.4,94.2 C99.3,91.1 101.5,86.7 105.3,86.1 C109.9,85.4 113.5,89.7 112.6,94.6"/>
+                  <path stroke-width="2.5" d="M76.8,101.6 C79,97.8 81.2,104.6 83.8,100.8 C86.4,97 88.6,103.8 90.8,100"/>
+                </g>
+              </g>
+              <g class="sp-mood sp-m-laugh">
+                <path fill="none" stroke="#1d1a19" stroke-width="3.6" stroke-linecap="round" d="M57,94 C60.5,83.8 69.5,83.8 73,94"/>
+                <path fill="none" stroke="#1d1a19" stroke-width="3.6" stroke-linecap="round" d="M97.1,95.6 C100.6,85.4 109.6,85.4 113.1,95.6"/>
+                <path fill="#1e2b45" stroke="#20201f" stroke-width="2.4" stroke-linejoin="round" d="M74.5,94 C78.5,100.5 89.5,100.5 93.5,93.5 C96.5,105.5 90,113 84,113 C78,113 71.5,105.5 74.5,94 Z"/>
+                <g clip-path="url(#spCpMouthBig)"><ellipse cx="84" cy="112" rx="9" ry="6.6" fill="#f4718f"/></g>
+              </g>
+            </g>
+
+            <g class="sp-lolli">
+              <g stroke="#20201f" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round">
+                <circle cx="48" cy="138" r="7.2" fill="#ffffff"/>
+                <path fill="#f6f9fc" d="M50.6,124.5 L53.6,124.2 L55.6,150.5 L52.6,150.8 Z"/>
+                <circle cx="49.5" cy="117" r="8.8" fill="url(#spCandy)"/>
+              </g>
+              <g fill="none" stroke="#20201f" stroke-width="1.5" stroke-linecap="round">
+                <path d="M41,114.6 C46.5,120.4 53.5,121.4 58.2,118.2"/>
+                <path d="M44.4,108.8 C48.8,113 51,119 51.4,125.6"/>
+              </g>
+            </g>
+
+
+            <g class="sp-hat">
+              <path fill="#ffffff" d="M52,66 C54,46 72,36 95,36 C118,36 135,46 137.5,66 Z"/>
+              <g stroke="#20201f" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+                <path fill="url(#spHat)" d="M74,54 C82,36 102,17 121,9 C126,6 132,8 135,14 C143,24 156,32 166,44 C170,49 170,56 167,61 C163,55 155,47 146,44 C146,54 146,62 145,74 C118,78 90,74 74,68 Z"/>
+                <g clip-path="url(#spCpCone)" stroke="none">
+                  <path fill="url(#spBand)" d="M58,24 C88,34 120,45 152,50 L150,67 C116,62 86,51 56,40 Z"/>
+                  <path class="sp-shine" fill="#ffffff" opacity=".28" d="M80,56 C84,38 98,22 114,12 C106,24 92,42 87,60 Z"/>
+                </g>
+                <path fill="none" stroke-width="2.1" d="M142.5,27 C144.8,37 145.6,47 145.2,57"/>
+                <path fill="url(#spBrim)" d="M25.3,69 C29,60 42,52 62,50.5 C86,49 122,58 150,77
+                  C161,88 169.5,94 172,101 C174.5,107 167.5,109.5 159.5,106.5
+                  C150,103 144.5,93.5 141,84.5
+                  C129,77 114,71 99,67.5 C85,64.2 71.5,61.5 61.5,62
+                  C51,62.6 46,72 42.5,80 C38.5,88 27,80 25.3,69 Z"/>
+                <path fill="none" stroke-width="1.9" d="M146,90 C152,97.5 157,102 162.5,104"/>
+              </g>
+            </g>
+            </svg>
+          </span>
+        </button>
+        <canvas class="sp-fx sp-fx-front" aria-hidden="true"></canvas>
+        <div class="sp-bubble" id="spiritBubble" role="status" aria-live="polite">
+          <span class="sp-tag">// Spirit Rule <b id="spiritNum">01/05</b></span>
+          <p id="spiritRule"></p>
+          <span class="sp-tip"></span>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PAGE 2: CONTAINERS
+     ============================================================ -->
+<section id="containers" class="page">
+  <div class="page-inner">
+    <div class="sec-head">
+      <h2>Containers</h2>
+      <p>// DEPLOYED <b>KNIGHTS</b> // 09 ACTIVE UNITS</p>
+    </div>
+
+    <div class="arena">
+
+
+
+
+
+       <!-- KNIGHT 10 -->
+      <article class="card" style="--accent:orange" data-tilt data-url="https://example.com/astral-monarch-2">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Mythic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/golden.jpg" alt="Astral Monarch"
+               onerror="this.src='https://placehold.co/600x800/04040a/d9b3ff?text=KNIGHT+09'">
+        </div>
+        <h2 class="name">Astral Monarch</h2>
+        <p class="role">Dimensional Summoner</p>
+        <p class="desc">Opens micro-rifts to summon spectral blades from another dimension. Unpredictable and untouchable.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 12 -->
+      <article class="card" style="--accent:gray" data-tilt data-url="https://example.com/astral-monarch-3">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Mythic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/white1.jpg" alt="Astral Monarch"
+               onerror="this.src='https://placehold.co/600x800/04040a/d9b3ff?text=KNIGHT+09'">
+        </div>
+        <h2 class="name">Astral Monarch</h2>
+        <p class="role">Dimensional Summoner</p>
+        <p class="desc">Opens micro-rifts to summon spectral blades from another dimension. Unpredictable and untouchable.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 11 -->
+      <article class="card" style="--accent:var(--purple)" data-tilt data-url="https://example.com/astral-monarch-4">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Mythic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/purple1.jpg" alt="Astral Monarch"
+               onerror="this.src='https://placehold.co/600x800/04040a/d9b3ff?text=KNIGHT+09'">
+        </div>
+        <h2 class="name">Astral Monarch</h2>
+        <p class="role">Dimensional Summoner</p>
+        <p class="desc">Opens micro-rifts to summon spectral blades from another dimension. Unpredictable and untouchable.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+        </div>
+      </article>
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <!-- KNIGHT 1 -->
+      <article class="card" style="--accent:var(--cyan)" data-tilt data-url="https://example.com/Wave-paladin">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Legendary</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/cyan.jpg" alt="Wave Paladin"
+               onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
+        </div>
+        <h2 class="name">Wave Paladin</h2>
+        <p class="role">Aegis Vanguard</p>
+        <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="88%"></i></div><span>88</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="64%"></i></div><span>64</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="95%"></i></div><span>95</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 3 -->
+      <article class="card" style="--accent:var(--green)" data-tilt data-url="https://example.com/shadow-blade">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Rare</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/green.jpg" alt="Shadow Blade"
+               onerror="this.src='https://placehold.co/600x800/04040a/00ff66?text=KNIGHT+03'">
+        </div>
+        <h2 class="name">Shadow Blade</h2>
+        <p class="role">Stealth Assassin</p>
+        <p class="desc">A ghost in the machine. He manipulates light and shadow to flank the arena, executing targets with surgical precision.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="82%"></i></div><span>82</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="90%"></i></div><span>90</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="44%"></i></div><span>44</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 8 -->
+      <article class="card" style="--accent:var(--yellow)" data-tilt data-url="https://example.com/frost-sovereign">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Epic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/yellow.jpg" alt="Frost Sovereign"
+               onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+08'">
+        </div>
+        <h2 class="name">Frost Sovereign</h2>
+        <p class="role">Cryo Controller</p>
+        <p class="desc">Freezes entire battle zones solid. Controls the tempo of any fight by locking down enemy movement.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="80%"></i></div><span>80</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="60%"></i></div><span>60</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="86%"></i></div><span>86</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 5 -->
+      <article class="card" style="--accent:var(--yellow)" data-tilt data-url="https://example.com/solar-ronin">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Legendary</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/fire.jpg" alt="Solar Ronin"
+               onerror="this.src='https://placehold.co/600x800/04040a/fcee0a?text=KNIGHT+05'">
+        </div>
+        <h2 class="name">Solar Ronin</h2>
+        <p class="role">Photon Duelist</p>
+        <p class="desc">Channels raw solar plasma into a razor-thin blade. Fast, precise, and blindingly bright in close quarters combat.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="85%"></i></div><span>85</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="93%"></i></div><span>93</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="50%"></i></div><span>50</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 6 -->
+      <article class="card" style="--accent:white" data-tilt data-url="https://example.com/pulse-reaper">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Epic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/white.jpg" alt="Pulse Reaper"
+               onerror="this.src='https://placehold.co/600x800/04040a/ff00ea?text=KNIGHT+06'">
+        </div>
+        <h2 class="name">Pulse Reaper</h2>
+        <p class="role">EMP Striker</p>
+        <p class="desc">Emits targeted EMP bursts that disable enemy shields and leave their cores exposed for a finishing blow.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="87%"></i></div><span>87</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="72%"></i></div><span>72</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="60%"></i></div><span>60</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 7 -->
+      <article class="card" style="--accent:blue" data-tilt data-url="https://example.com/venom-warden">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Rare</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/blue1.jpg" alt="Venom Warden"
+               onerror="this.src='https://placehold.co/600x800/04040a/00ff66?text=KNIGHT+07'">
+        </div>
+        <h2 class="name">Venom Warden</h2>
+        <p class="role">Bio-Toxin Specialist</p>
+        <p class="desc">Deploys nanite swarms that corrode armor over time and heal nearby allies with harvested energy.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="78%"></i></div><span>78</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="68%"></i></div><span>68</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="72%"></i></div><span>72</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 2 -->
+      <article class="card" style="--accent:var(--red)" data-tilt data-url="https://example.com/crimson-vanguard">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Epic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/red1.jpg" alt="Crimson Vanguard"
+               onerror="this.src='https://placehold.co/600x800/04040a/ff00ea?text=KNIGHT+02'">
+        </div>
+        <h2 class="name">Crimson Vanguard</h2>
+        <p class="role">Plasma Blade Master</p>
+        <p class="desc">Forged in the radioactive wastelands, his thermal katana cuts through titanium like butter. A relentless frontline duelist.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="92%"></i></div><span>92</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="80%"></i></div><span>80</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="58%"></i></div><span>58</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 4 -->
+      <article class="card" style="--accent:var(--purple)" data-tilt data-url="https://example.com/void-sentinel">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Mythic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/purple.jpg" alt="Void Sentinel"
+               onerror="this.src='https://placehold.co/600x800/04040a/b06bff?text=KNIGHT+04'">
+        </div>
+        <h2 class="name">Void Sentinel</h2>
+        <p class="role">Gravity Warden</p>
+        <p class="desc">Bends local gravity fields to pin enemies in place and shatter incoming projectiles mid-air before they ever land.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="90%"></i></div><span>90</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="55%"></i></div><span>55</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="88%"></i></div><span>88</span></div>
+        </div>
+      </article>
+
+      <!-- KNIGHT 9 -->
+      <article class="card" style="--accent:gray" data-tilt data-url="https://example.com/astral-monarch-1">
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Mythic</span>
+        <div class="img-wrap">
+          <img class="card-img" src="img/lady.jpg" alt="Astral Monarch"
+               onerror="this.src='https://placehold.co/600x800/04040a/d9b3ff?text=KNIGHT+09'">
+        </div>
+        <h2 class="name">Astral Monarch</h2>
+        <p class="role">Dimensional Summoner</p>
+        <p class="desc">Opens micro-rifts to summon spectral blades from another dimension. Unpredictable and untouchable.</p>
+        <div class="stats">
+          <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="95%"></i></div><span>95</span></div>
+          <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="75%"></i></div><span>75</span></div>
+          <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="70%"></i></div><span>70</span></div>
+        </div>
+      </article>
+
+     
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PAGE 3: PROJECTS
+     ============================================================ -->
+<section id="projects" class="page">
+  <div class="page-inner">
+    <div class="sec-head">
+      <h2>Projects</h2>
+      <p>// ACTIVE <b>OPERATIONS</b> // 08 IN PROGRESS</p>
+    </div>
+
+    <div class="grid-projects">
+      <!-- PROJECT 1 -->
+      <article class="proj-card" style="--accent:var(--purple)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Tier-1</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">G</span>
+        </div>
+        <h2 class="name">Ghost Protocol</h2>
+        <p class="role">Stealth Recon</p>
+        <p class="desc">Fully cloaked recon frame that phases through light-spectrum detection grids.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0091</b></div><div>Status<b>76%</b></div></div>
+        <a href="https://example.com/ghost-protocol" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 2 -->
+      <article class="proj-card" style="--accent:#0000FF" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Heavy</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">T</span>
+        </div>
+        <h2 class="name">Titan Fall</h2>
+        <p class="role">Assault Exosuit</p>
+        <p class="desc">Heavy exosuit built to withstand direct plasma strikes and deliver orbital drops.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0142</b></div><div>Status<b>54%</b></div></div>
+        <a href="https://example.com/titan-fall" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 3 -->
+      <article class="proj-card" style="--accent:var(--cyan)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Defense</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">N</span>
+        </div>
+        <h2 class="name">Wave Veil</h2>
+        <p class="role">Holo Camouflage</p>
+        <p class="desc">City-wide holographic network projecting false terrain signatures.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0207</b></div><div>Status<b>91%</b></div></div>
+        <a href="https://example.com/Wave-veil" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 4 -->
+      <article class="proj-card" style="--accent:var(--green)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Neural</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">A</span>
+        </div>
+        <h2 class="name">Ascension</h2>
+        <p class="role">Neural Link V2</p>
+        <p class="desc">Next-gen neural sync letting pilots bond with knight frames at thought-speed.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0318</b></div><div>Status<b>33%</b></div></div>
+        <a href="https://example.com/ascension" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 5 -->
+      <article class="proj-card" style="--accent:var(--yellow)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Neural</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">A</span>
+        </div>
+        <h2 class="name">Ascension</h2>
+        <p class="role">Neural Link V2</p>
+        <p class="desc">Next-gen neural sync letting pilots bond with knight frames at thought-speed.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0318</b></div><div>Status<b>33%</b></div></div>
+        <a href="https://example.com/ascension" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 6 -->
+      <article class="proj-card" style="--accent:orange" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Neural</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">A</span>
+        </div>
+        <h2 class="name">Ascension</h2>
+        <p class="role">Neural Link V2</p>
+        <p class="desc">Next-gen neural sync letting pilots bond with knight frames at thought-speed.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0318</b></div><div>Status<b>33%</b></div></div>
+        <a href="https://example.com/ascension" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 7 -->
+      <article class="proj-card" style="--accent:var(--red)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Neural</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">A</span>
+        </div>
+        <h2 class="name">Ascension</h2>
+        <p class="role">Neural Link V2</p>
+        <p class="desc">Next-gen neural sync letting pilots bond with knight frames at thought-speed.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0318</b></div><div>Status<b>33%</b></div></div>
+        <a href="https://example.com/ascension" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 8 -->
+      <article class="proj-card" style="--accent:var(--purple)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Neural</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">A</span>
+        </div>
+        <h2 class="name">Ascension</h2>
+        <p class="role">Neural Link V2</p>
+        <p class="desc">Next-gen neural sync letting pilots bond with knight frames at thought-speed.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0318</b></div><div>Status<b>33%</b></div></div>
+        <a href="https://example.com/ascension" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 9 -->
+      <article class="proj-card" style="--accent:var(--purple)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Neural</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">A</span>
+        </div>
+        <h2 class="name">Ascension</h2>
+        <p class="role">Neural Link V2</p>
+        <p class="desc">Next-gen neural sync letting pilots bond with knight frames at thought-speed.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0318</b></div><div>Status<b>33%</b></div></div>
+        <a href="https://example.com/ascension" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+      <!-- PROJECT 10 -->
+      <article class="proj-card" style="--accent:var(--purple)" data-tilt-small>
+        <span class="brk tl"></span><span class="brk tr"></span>
+        <span class="brk bl"></span><span class="brk br"></span>
+        <span class="rarity">Neural</span>
+        <div class="proj-circle-wrap">
+          <div class="proj-circle"></div>
+          <div class="proj-circle-2"></div>
+          <div class="proj-circle-3"></div>
+          <span class="proj-letter">A</span>
+        </div>
+        <h2 class="name">Ascension</h2>
+        <p class="role">Neural Link V2</p>
+        <p class="desc">Next-gen neural sync letting pilots bond with knight frames at thought-speed.</p>
+        <div class="proj-meta"><div>Code<b>PRJ-0318</b></div><div>Status<b>33%</b></div></div>
+        <a href="https://example.com/ascension" target="_blank" rel="noopener" class="proj-link">Click Me ↗</a>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PAGE 4: ABOUT
+     ============================================================ -->
+<section id="about" class="page">
+  <div class="page-inner">
+    <div class="sec-head">
+      <h2>About</h2>
+      <p>// OPERATOR <b>PROFILE</b> //</p>
+    </div>
+
+    <div class="about-grid-2">
+      <!-- Bio panel -->
+      <div class="about-panel">
+        <h3>// Bio</h3>
+        <p>
+          Hey — I'm the developer behind <b>Wave Arena</b>. I build immersive, futuristic
+          web experiences blending <em>cyberpunk aesthetics</em> with clean, high-performance
+          front-end code.
+        </p>
+        <p>
+          I specialize in <b>UI/UX design</b>, <em>interactive animations</em>, and custom
+          web builds that feel like stepping into another world. If you have a project
+          in mind, let's make it glow.
+        </p>
+        <div class="tags">
+          <span class="tag">Front-End</span>
+          <span class="tag">UI / UX</span>
+          <span class="tag">Animation</span>
+          <span class="tag">Cyberpunk</span>
+          <span class="tag">Web Builds</span>
+        </div>
+      </div>
+
+      <!-- Contact panel -->
+      <div class="about-panel">
+        <h3>// Contact</h3>
+
+        <!-- ===== SINGLE KNIGHT-STYLE CONTAINER ===== -->
+        <article class="card" style="--accent:#823aff; max-width:360px; margin:0 auto;" data-tilt data-url="https://example.com/Wave-paladin">
+          <span class="brk tl"></span><span class="brk tr"></span>
+          <span class="brk bl"></span><span class="brk br"></span>
+          <span class="rarity">?</span>
+          <div class="img-wrap">
+            <img class="card-img" src="img/mini1.png" alt="Wave Paladin"
+                 onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
+          </div>
+          <h2 class="name">Wave Operator</h2>
+          <p class="role">Aegis Vanguard</p>
+          <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
+          <div class="stats">
+            <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+            <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+            <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          </div>
+        </article>
+        <!-- ===== END SINGLE CONTAINER ===== -->
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   1. PAGE SWITCHING LOGIC (No Scroll between pages)
+   ============================================================ */
+const navBtns = document.querySelectorAll('.nav-btn');
+const pages = document.querySelectorAll('.page');
+
+navBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.dataset.target;
+    const targetPage = document.getElementById(targetId);
+
+    if (!targetPage) return;
+
+    pages.forEach(page => page.classList.remove('active'));
+    targetPage.classList.add('active');
+
+    navBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    targetPage.scrollTop = 0;
+
+    if (targetId === 'containers') {
+      animateBars();
+    }
+  });
+});
+
+/* ============================================================
+   2. PARTICLE CANVAS — constellation effect
+   ============================================================ */
+(function(){
+  const cvs = document.getElementById('particle-canvas');
+  const ctx = cvs.getContext('2d');
+  let W, H, parts = [];
+  const COLORS = ['#00f3ff','#ff00ea','#b06bff','#d9b3ff'];
+  const COUNT = window.innerWidth < 700 ? 40 : 90;
+  const LINK_DIST = 130;
+
+  function resize(){
+    W = cvs.width  = window.innerWidth;
+    H = cvs.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize); resize();
+
+  function mk(){
+    return {
+      x: Math.random()*W, y: Math.random()*H,
+      vx:(Math.random()-.5)*0.45, vy:(Math.random()-.5)*0.45,
+      r: Math.random()*1.8 + 0.6,
+      c: COLORS[(Math.random()*COLORS.length)|0]
+    };
+  }
+  for(let i=0;i<COUNT;i++) parts.push(mk());
+
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<parts.length;i++){
+      for(let j=i+1;j<parts.length;j++){
+        const a=parts[i], b=parts[j];
+        const dx=a.x-b.x, dy=a.y-b.y;
+        const d2=dx*dx+dy*dy;
+        if(d2 < LINK_DIST*LINK_DIST){
+          const o = 1 - Math.sqrt(d2)/LINK_DIST;
+          ctx.strokeStyle = 'rgba(176,107,255,'+(o*0.16)+')';
+          ctx.lineWidth = 0.6;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    for(const p of parts){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1;
+      if(p.y<0||p.y>H) p.vy*=-1;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.c;
+      ctx.shadowBlur = 12; ctx.shadowColor = p.c;
+      ctx.fill(); ctx.shadowBlur = 0;
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ============================================================
+   3. STAT BAR ANIMATION
+   ============================================================ */
+function animateBars(){
+  document.querySelectorAll('.fill').forEach((el,i)=>{
+    el.style.width = '0%';
+    setTimeout(()=>{ el.style.width = el.dataset.w; }, 200 + (i%12)*100);
+  });
+}
+
+window.addEventListener('load', animateBars);
+
+/* ============================================================
+   4. 3D TILT (big cards)
+   ============================================================ */
+document.querySelectorAll('[data-tilt]').forEach(card=>{
+  const MAX = 9;
+  card.addEventListener('mousemove', e=>{
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width  - .5;
+    const py = (e.clientY - r.top ) / r.height - .5;
+    card.style.transform =
+      `perspective(1000px) rotateY(${px*MAX*2}deg) rotateX(${-py*MAX*2}deg) translateY(-10px) scale(1.02)`;
+  });
+  card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+});
+
+/* 3D tilt (small project cards) */
+document.querySelectorAll('[data-tilt-small]').forEach(card=>{
+  const MAX = 6;
+  card.addEventListener('mousemove', e=>{
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width  - .5;
+    const py = (e.clientY - r.top ) / r.height - .5;
+    card.style.transform =
+      `perspective(1000px) rotateY(${px*MAX*2}deg) rotateX(${-py*MAX*2}deg) translateY(-8px) scale(1.03)`;
+  });
+  card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+});
+
+/* ============================================================
+   5. CONTAINER CARD CLICK → OPEN WEBSITE
+   ============================================================ */
+document.querySelectorAll('.card[data-url]').forEach(card => {
+  card.addEventListener('click', () => {
+    const url = card.dataset.url;
+    if (url) window.open(url, '_blank', 'noopener');
+  });
+});
+</script>
+<script>
+/* ============================================================
+   SPIRIT BABY — orbiting particles + click-for-a-rule
+   (self-contained; does not touch any of the code above)
+   ============================================================ */
+(function(){
+  /* ✎ EDIT ME: each click on the spirit shows the next small rule.
+     Keep just one line here if you want it to always show the same rule. */
+  const RULES = [
+    "Be kind to every knight in the arena.",
+    "No stealing art — always credit the creator.",
+    "No spam, no drama. Keep it friendly.",
+    "Respect everyone's privacy and space.",
+    "Have fun — that's the golden rule!"
+  ];
+
+  const stage  = document.getElementById('spiritStage');
+  const btn    = document.getElementById('spiritBtn');
+  const bubble = document.getElementById('spiritBubble');
+  const numEl  = document.getElementById('spiritNum');
+  const ruleEl = document.getElementById('spiritRule');
+  if (!stage || !btn || !bubble || !RULES.length) return;
+  const art  = btn.querySelector('.sp-art');
+
+  /* ---------- face moods: the little ghost keeps changing expression ---------- */
+  const MOODS       = ['happy','wink','love','star','uwu','surprised','sleepy','cool','dizzy','laugh'];
+  const CLICK_MOODS = ['love','star','laugh','wink','uwu','surprised'];
+  let idleTimer = 0;
+  function setMood(m){ art.setAttribute('data-mood', m); }
+  function pick(list){
+    const now = art.getAttribute('data-mood');
+    let m = now;
+    for (let i = 0; i < 8 && m === now; i++) m = list[(Math.random() * list.length) | 0];
+    return m;
+  }
+  function idleMoods(delay){
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      setMood(pick(MOODS));
+      idleMoods();
+    }, delay || (2800 + Math.random() * 2800));
+  }
+  idleMoods(2200);
+  const back = stage.querySelector('.sp-fx-back');
+  const front = stage.querySelector('.sp-fx-front');
+  const bctx = back.getContext('2d');
+  const fctx = front.getContext('2d');
+  const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ---------- click → rule bubble ---------- */
+  let ruleIdx = 0, hideTimer = 0;
+  const pad = n => (n < 10 ? '0' : '') + n;
+
+  function showRule(){
+    ruleEl.textContent = RULES[ruleIdx];
+    numEl.textContent  = pad(ruleIdx + 1) + '/' + pad(RULES.length);
+    ruleIdx = (ruleIdx + 1) % RULES.length;
+    bubble.classList.add('show');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideRule, 6500);
+  }
+  function hideRule(){
+    clearTimeout(hideTimer);
+    bubble.classList.remove('show');
+  }
+  function boop(){
+    art.classList.remove('sp-boop');
+    void art.getBoundingClientRect();            // restart the animation if clicked quickly
+    art.classList.add('sp-boop');
+  }
+  art.addEventListener('animationend', e => {
+    if (e.target === art) art.classList.remove('sp-boop');
+  });
+
+  btn.addEventListener('click', () => { showRule(); boop(); burst(); setMood(pick(CLICK_MOODS)); idleMoods(3200); });
+  btn.addEventListener('mouseenter', () => { setMood(pick(['uwu','love','star','laugh'])); idleMoods(3000); });
+  document.addEventListener('click', e => { if (!btn.contains(e.target)) hideRule(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hideRule(); });
+
+  /* ---------- orbiting particles ---------- */
+  // site colours: cyan, magenta, yellow, green, purple, red, white
+  const PALETTE = [[0,243,255],[255,0,234],[252,238,10],[0,255,102],[176,107,255],[255,45,85],[255,255,255]];
+  // three orbit "rings": size (× stage), squash, tilt, spin speed (rad/s, sign = direction)
+  const RINGS = [
+    { n:6, rx:.50, ry:.20, tilt:-.35, w: .95 },
+    { n:5, rx:.43, ry:.33, tilt: .60, w:-1.30 },
+    { n:5, rx:.54, ry:.24, tilt:1.30, w: .65 }
+  ];
+  const TRAIL = 6;
+
+  function makeGlow(rgb){
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d'), r = rgb[0], gg = rgb[1], b = rgb[2];
+    const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0,   'rgba(' + Math.min(255, r + 110) + ',' + Math.min(255, gg + 110) + ',' + Math.min(255, b + 110) + ',1)');
+    gr.addColorStop(.2,  'rgba(' + r + ',' + gg + ',' + b + ',1)');
+    gr.addColorStop(.45, 'rgba(' + r + ',' + gg + ',' + b + ',.35)');
+    gr.addColorStop(1,   'rgba(' + r + ',' + gg + ',' + b + ',0)');
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 64, 64);
+    return c;
+  }
+  const glows = PALETTE.map(makeGlow);
+
+  const parts = [];
+  let ci = 0;
+  RINGS.forEach((ring, ri) => {
+    for (let i = 0; i < ring.n; i++, ci++){
+      parts.push({
+        ring: ring,
+        a: (i / ring.n) * Math.PI * 2 + ri * .7 + Math.random() * .3,
+        gi: ci % PALETTE.length,
+        size: 1.8 + Math.random() * 1.7,
+        star: ci % 3 === 0,
+        ph: Math.random() * 6.28
+      });
+    }
+  });
+
+  const sparks = [];
+  let S = 0, C = 0, dpr = 1;             // stage size, canvas size (css px), pixel ratio
+  let t = 0, last = 0, boost = 1, flash = 0;
+
+  function resize(){
+    const s = stage.clientWidth;
+    if (!s) return;                      // Home tab hidden → nothing to size
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    S = s; C = s * 1.24;
+    back.width = back.height = front.width = front.height = Math.round(C * dpr);
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(stage);
+  window.addEventListener('resize', resize);
+  resize();
+
+  function burst(){
+    boost = reduce ? 1.6 : 4.2;
+    flash = 1;
+    for (let i = 0; i < 14 && sparks.length < 42; i++){
+      sparks.push({
+        ang: Math.random() * Math.PI * 2,
+        dist: .24 + Math.random() * .28,
+        life: 0, dur: .7 + Math.random() * .4,
+        gi: (Math.random() * PALETTE.length) | 0,
+        size: 1.8 + Math.random() * 1.6
+      });
+    }
+  }
+
+  function glowDot(ctx, gi, x, y, r, alpha){
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(glows[gi], x - r, y - r, r * 2, r * 2);
+  }
+
+  function drawOn(p, a, sizeMul, alphaMul, head, k){
+    const R = p.ring, cs = Math.cos(R.tilt), sn = Math.sin(R.tilt);
+    const ex = Math.cos(a) * R.rx * S, ey = Math.sin(a) * R.ry * S;
+    const x = C / 2 + ex * cs - ey * sn;
+    const y = C / 2 + ex * sn + ey * cs;
+    const z = Math.sin(a);                                  // >0 = passing in front of the sprite
+    const ctx = z > 0 ? fctx : bctx;
+    const depth = .75 + .35 * (z + 1) / 2;
+    const tw = .78 + .22 * Math.sin(t * 4 + p.ph);
+    const r = p.size * 3.5 * k * depth * sizeMul * (1 + flash * .7);
+    const al = (z > 0 ? 1 : .62) * alphaMul * tw;
+    glowDot(ctx, p.gi, x, y, r, al);
+    if (head && p.star){                                     // little twinkle cross on some particles
+      ctx.globalAlpha = al;
+      ctx.strokeStyle = 'rgba(255,255,255,.9)';
+      ctx.lineWidth = Math.max(.6, .8 * k);
+      const L = r * 1.05;
+      ctx.beginPath();
+      ctx.moveTo(x - L, y); ctx.lineTo(x + L, y);
+      ctx.moveTo(x, y - L * 1.3); ctx.lineTo(x, y + L * 1.3);
+      ctx.stroke();
+    }
+  }
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    if (!S) return;
+    const dt = Math.min((now - last) / 1000, .05);
+    last = now;
+    t += dt;
+    boost += (1 - boost) * (1 - Math.exp(-dt * 2.4));
+    flash += (0 - flash) * (1 - Math.exp(-dt * 3));
+    const spd = (reduce ? .3 : 1) * boost;
+    const k = S / 140;
+
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bctx.clearRect(0, 0, C, C);
+    fctx.clearRect(0, 0, C, C);
+    bctx.globalCompositeOperation = 'lighter';
+    fctx.globalCompositeOperation = 'source-over';
+
+    for (const p of parts){
+      p.a += p.ring.w * spd * dt;
+      if (!reduce){
+        const dir = p.ring.w > 0 ? 1 : -1;
+        for (let j = TRAIL; j >= 1; j--){
+          drawOn(p, p.a - dir * j * .085, 1 - j / (TRAIL + 1) * .7, .5 * (1 - j / (TRAIL + 1)), false, k);
+        }
+      }
+      drawOn(p, p.a, 1, 1, true, k);
+    }
+
+    // click burst sparkles
+    for (let i = sparks.length - 1; i >= 0; i--){
+      const s = sparks[i];
+      s.life += dt;
+      const u = s.life / s.dur;
+      if (u >= 1){ sparks.splice(i, 1); continue; }
+      const e = 1 - (1 - u) * (1 - u);
+      const x = C / 2 + Math.cos(s.ang) * s.dist * S * e;      // stays inside the canvas
+      const y = C / 2 + Math.sin(s.ang) * s.dist * S * e;
+      glowDot(fctx, s.gi, x, y, s.size * 3.4 * k * (1 - u * .5), 1 - u);
+    }
+    fctx.globalAlpha = 1;
+    bctx.globalAlpha = 1;
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ============================================================
+   CYBERPUNK NEON CIRCLE — 40 independently-spinning rings, a live
+   rotating wireframe globe at the centre, and tiny drifting light
+   particles. Touches nothing outside the .circle-wrapper on the
+   Home tab.
+   ============================================================ */
+(() => {
+  const wrap = document.querySelector('.circle-wrapper');
+  if (!wrap) return;
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const NEON = ['#00f3ff', '#ff00ea', '#b06bff', '#fcee0a', '#5df4ff', '#ff5bd0'];
+
+  /* ---------- 40 independent neon rings ---------- */
+  const ringsLayer = document.getElementById('ringsLayer');
+  if (ringsLayer) {
+    const GLOBE_R = 150;          // keep rings clear of the globe's round space
+    const OUTER_R = 495;
+    const COUNT = 40;
+    for (let i = 0; i < COUNT; i++) {
+      const t = i / (COUNT - 1);
+      const r = GLOBE_R + 28 + t * (OUTER_R - GLOBE_R - 28);
+      const color = NEON[i % NEON.length];
+      const dir = i % 2 === 0 ? 'spin' : 'spin-rev';
+      const dur = (9 + Math.random() * 70).toFixed(1);
+      const dashed = Math.random() > 0.35;
+      const dash = dashed ? `${(2 + Math.random() * 10).toFixed(1)} ${(6 + Math.random() * 22).toFixed(1)}` : '';
+      const width = (0.6 + Math.random() * 1.8).toFixed(2);
+      const opacity = (0.28 + Math.random() * 0.5).toFixed(2);
+      const tilt = (Math.random() * 40 - 20).toFixed(1);
+      const squash = (0.55 + Math.random() * 0.45).toFixed(2);
+
+      const g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('class', 'ring-auto');
+      g.style.animation = `${dir} ${dur}s linear infinite`;
+
+      const el = document.createElementNS(svgNS, 'ellipse');
+      el.setAttribute('cx', '500');
+      el.setAttribute('cy', '500');
+      el.setAttribute('rx', r.toFixed(1));
+      el.setAttribute('ry', (r * squash).toFixed(1));
+      el.setAttribute('transform', `rotate(${tilt} 500 500)`);
+      el.setAttribute('stroke', color);
+      el.setAttribute('stroke-width', width);
+      el.setAttribute('opacity', opacity);
+      if (dash) el.setAttribute('stroke-dasharray', dash);
+      g.appendChild(el);
+
+      // occasional glowing marker node on a ring, cyberpunk "data node" accent
+      if (Math.random() > 0.6) {
+        const dot = document.createElementNS(svgNS, 'circle');
+        dot.setAttribute('cx', (500 + r).toFixed(1));
+        dot.setAttribute('cy', '500');
+        dot.setAttribute('r', (2 + Math.random() * 2.4).toFixed(1));
+        dot.setAttribute('fill', color);
+        dot.setAttribute('filter', 'url(#glow)');
+        dot.setAttribute('transform', `rotate(${tilt} 500 500)`);
+        g.appendChild(dot);
+      }
+
+      ringsLayer.appendChild(g);
+    }
+  }
+
+  /* ---------- rotating wireframe neon globe, dead centre ---------- */
+  const globeGrid  = document.getElementById('globeGrid');
+  const globeBlips = document.getElementById('globeBlips');
+  if (globeGrid) {
+    const R = 150, CX = 500, CY = 500, TILT = 20 * Math.PI / 180;
+    const MER = 12, MER_STEPS = 26;
+    const PAR_LATS = [-60, -30, 0, 30, 60];
+    const PAR_STEPS = 48;
+
+    const meridianPaths = [];
+    for (let i = 0; i < MER; i++) {
+      const p = document.createElementNS(svgNS, 'path');
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', NEON[i % NEON.length]);
+      p.setAttribute('stroke-width', '1.3');
+      globeGrid.appendChild(p);
+      meridianPaths.push({ el: p, lon: (i / MER) * Math.PI });
+    }
+    const parallelPaths = PAR_LATS.map((lat, i) => {
+      const p = document.createElementNS(svgNS, 'path');
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', 'var(--cyan)');
+      p.setAttribute('stroke-width', '1');
+      globeGrid.appendChild(p);
+      return { el: p, lat: lat * Math.PI / 180 };
+    });
+    const blipDefs = Array.from({ length: 9 }, () => ({
+      lat: (Math.random() * 160 - 80) * Math.PI / 180,
+      lon: Math.random() * Math.PI * 2,
+      el: (() => {
+        const c = document.createElementNS(svgNS, 'circle');
+        c.setAttribute('r', '3.2');
+        c.setAttribute('fill', NEON[(Math.random() * NEON.length) | 0]);
+        c.setAttribute('filter', 'url(#glow)');
+        globeBlips.appendChild(c);
+        return c;
+      })()
+    }));
+
+    function project(lat, lon, spin) {
+      const x3 = R * Math.cos(lat) * Math.sin(lon + spin);
+      const y3 = R * Math.sin(lat);
+      const z3 = R * Math.cos(lat) * Math.cos(lon + spin);
+      const y2 = y3 * Math.cos(TILT) - z3 * Math.sin(TILT);
+      const z2 = y3 * Math.sin(TILT) + z3 * Math.cos(TILT);
+      return { x: CX + x3, y: CY - y2, z: z2 };
+    }
+
+    let spin = 0;
+    function renderGlobe(dt) {
+      spin += dt * 0.35; // rotation speed of the globe itself
+
+      meridianPaths.forEach(m => {
+        let d = '';
+        let depthSum = 0;
+        for (let s = 0; s <= MER_STEPS; s++) {
+          const lat = -Math.PI / 2 + (s / MER_STEPS) * Math.PI;
+          const pt = project(lat, m.lon, spin);
+          depthSum += pt.z;
+          d += (s === 0 ? 'M' : 'L') + pt.x.toFixed(1) + ' ' + pt.y.toFixed(1) + ' ';
+        }
+        const depth = depthSum / (MER_STEPS + 1);
+        m.el.setAttribute('d', d);
+        m.el.setAttribute('opacity', Math.max(0.06, 0.15 + (depth / R) * 0.55).toFixed(2));
+      });
+
+      parallelPaths.forEach(p => {
+        let d = '';
+        let depthSum = 0;
+        for (let s = 0; s <= PAR_STEPS; s++) {
+          const lon = (s / PAR_STEPS) * Math.PI * 2;
+          const pt = project(p.lat, lon, spin);
+          depthSum += pt.z;
+          d += (s === 0 ? 'M' : 'L') + pt.x.toFixed(1) + ' ' + pt.y.toFixed(1) + ' ';
+        }
+        const depth = depthSum / (PAR_STEPS + 1);
+        p.el.setAttribute('d', d + 'Z');
+        p.el.setAttribute('opacity', Math.max(0.05, 0.14 + (depth / R) * 0.5).toFixed(2));
+      });
+
+      blipDefs.forEach(b => {
+        const pt = project(b.lat, b.lon, spin);
+        b.el.setAttribute('cx', pt.x.toFixed(1));
+        b.el.setAttribute('cy', pt.y.toFixed(1));
+        const front = pt.z > 0;
+        b.el.setAttribute('opacity', front ? Math.min(1, 0.4 + pt.z / R).toFixed(2) : 0);
+      });
+    }
+
+    let lastT = 0;
+    function globeFrame(now) {
+      requestAnimationFrame(globeFrame);
+      const dt = Math.min((now - lastT) / 1000, 0.05) || 0;
+      lastT = now;
+      renderGlobe(dt);
+    }
+    requestAnimationFrame(globeFrame);
+  }
+
+  /* ---------- tiny light particles drifting off the bezel ---------- */
+  const canvas = document.getElementById('watchParticles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const COLORS = [[0,243,255],[252,238,10],[176,107,255],[255,255,255],[255,0,234]];
+  let W = 0, H = 0, dpr = 1;
+  const MAX = reduce ? 0 : 46;
+  const FLOAT_MAX = reduce ? 0 : 20;
+  const bits = [];
+  const floaters = [];
+
+  function resize(){
+    const r = wrap.getBoundingClientRect();
+    if (!r.width) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(wrap);
+  window.addEventListener('resize', resize);
+  resize();
+
+  function spawn(){
+    const ang = Math.random() * Math.PI * 2;
+    const edge = 0.43; // ~ bezel radius as a fraction of stage
+    const c = COLORS[(Math.random() * COLORS.length) | 0];
+    bits.push({
+      ang,
+      r0: edge * (0.94 + Math.random() * 0.1),
+      speed: 0.006 + Math.random() * 0.01,
+      drift: (Math.random() - 0.5) * 0.4,
+      size: 0.5 + Math.random() * 1.1,   // deliberately tiny
+      life: 0,
+      dur: 3.2 + Math.random() * 3.2,
+      c
+    });
+  }
+
+  function spawnFloater(){
+    const c = COLORS[(Math.random() * COLORS.length) | 0];
+    floaters.push({
+      x: Math.random(),                 // 0..1 across the stage
+      y: 1.15 + Math.random() * 0.25,    // starts just below the stage
+      wob: Math.random() * Math.PI * 2,
+      wobSpeed: 0.6 + Math.random() * 0.8,
+      wobAmt: 0.02 + Math.random() * 0.035,
+      rise: 0.05 + Math.random() * 0.06, // fraction of stage height per second
+      size: 1.4 + Math.random() * 2.6,
+      life: 0,
+      dur: 7 + Math.random() * 6,
+      c
+    });
+  }
+
+  let last = 0;
+  function frame(now){
+    requestAnimationFrame(frame);
+    if (!W) return;
+    const dt = Math.min((now - last) / 1000, 0.05) || 0;
+    last = now;
+
+    while (bits.length < MAX) spawn();
+    while (floaters.length < FLOAT_MAX) spawnFloater();
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2;
+
+    for (let i = bits.length - 1; i >= 0; i--){
+      const b = bits[i];
+      b.life += dt;
+      if (b.life >= b.dur){ bits.splice(i, 1); continue; }
+      const u = b.life / b.dur;
+      const rad = (b.r0 + u * b.speed * 26) * R;
+      const a = b.ang + u * b.drift;
+      const x = cx + Math.cos(a) * rad;
+      const y = cy + Math.sin(a) * rad;
+      const alpha = Math.sin(Math.PI * u) * 0.85;
+      const [rr, gg, bb] = b.c;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${rr},${gg},${bb},${alpha})`;
+      ctx.shadowColor = `rgba(${rr},${gg},${bb},0.9)`;
+      ctx.shadowBlur = b.size * 3;
+      ctx.arc(x, y, b.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    for (let i = floaters.length - 1; i >= 0; i--){
+      const f = floaters[i];
+      f.life += dt;
+      if (f.life >= f.dur){ floaters.splice(i, 1); continue; }
+      const u = f.life / f.dur;
+      f.y -= (f.rise * dt);
+      f.wob += f.wobSpeed * dt;
+      const x = (f.x + Math.sin(f.wob) * f.wobAmt) * W;
+      const y = f.y * H;
+      const fade = Math.min(1, u * 4) * Math.min(1, (1 - u) * 4);
+      const [rr, gg, bb] = f.c;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${rr},${gg},${bb},${fade * 0.7})`;
+      ctx.shadowColor = `rgba(${rr},${gg},${bb},0.95)`;
+      ctx.shadowBlur = f.size * 4;
+      ctx.arc(x, y, f.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
+
+
+
+
