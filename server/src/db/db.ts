@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import { config } from "../config/config.js"
 
 export async function connectDatabase() {
-  const connectionString: string = process.env.MONGODB_URI as string
+  const connectionString: string = config.databaseURL as string;
   if (!connectionString) {
     throw new Error("Connection URL not found. Database connection failed!")
   }
