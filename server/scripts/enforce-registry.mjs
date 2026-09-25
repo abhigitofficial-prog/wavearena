@@ -1,30 +1,5 @@
 #!/usr/bin/env node
 // Keeps package-lock.json pointing at the public npm registry.
-//
-// Why this exists:
-//   Replit injects NPM_CONFIG_REGISTRY (and a lowercase npm_config_registry)
-//   pointing at http://package-firewall.replit.internal/npm/. That host only
-//   resolves inside Replit's network, so any `resolved` URL it writes into the
-//   lockfile breaks every build on Vercel / GitHub Actions / CI with:
-//
-//     npm error network request to http://package-firewall.replit.internal/...
-//     npm error errno ENOTFOUND
-//
-//   .npmrc cannot fix this on Replit, because an env var always outranks a
-//   project .npmrc. A child process also cannot unset its parent's env var.
-//   The one thing that does work is rewriting the file on disk before it gets
-//   committed, which is what this script does.
-//
-// Wired into both preinstall and postinstall:
-//   preinstall  - sanitizes a stale/poisoned lockfile before npm reads it
-//                 (this is the path `npm ci` takes, which never rewrites it)
-//   postinstall - sanitizes the lockfile npm just wrote, so newly added
-//                 dependencies can't re-introduce the internal host
-//
-// This script is idempotent and dependency-free. As an npm lifecycle hook it
-// never fails the install - a guard that breaks `npm install` is worse than the
-// problem it prevents. Run directly (`npm run check:registry`) it exits 1 if
-// it cannot read/write the lockfile, so it can also be used as a CI gate.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
