@@ -2,6 +2,21 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+export interface IUser {
+  firstName: string;
+  lastName?: string;
+  userName: string;
+  email: string;
+  password: string;
+  avatar: {
+    url: string | null;
+    publicId: string | null;
+  };
+  isVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -78,4 +93,4 @@ userSchema.methods.generateAccessToken = async function(){
   }, process.env.ACCESS_TOKEN_SECRET!, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY })
 }
 
-export const user = mongoose.model("User", userSchema)
+export const User = mongoose.model<IUser>("User", userSchema)
