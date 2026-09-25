@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 export interface IUser {
@@ -95,7 +95,7 @@ userSchema.methods.generateAccessToken = async function(){
     userId: this._id,
     email: this.email,
     userName: this.userName,
-  }, process.env.ACCESS_TOKEN_SECRET!, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY })
+  }, process.env.ACCESS_TOKEN_SECRET!, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY as SignOptions["expiresIn"]})
 }
 
 export const User = mongoose.model<IUser, mongoose.Model<IUser, {}, IUserMethods>>("User", userSchema)
