@@ -17,7 +17,12 @@ export interface IUser {
   updatedAt: Date;
 }
 
-const userSchema = new mongoose.Schema({
+export interface IUserMethods {
+  isPasswordCorrect(password: string): Promise<boolean>;
+  generateAccessToken(): Promise<string>;
+}
+
+const userSchema = new mongoose.Schema<IUser, {}, IUserMethods>({
   firstName: {
     type: String,
     trim: true,
@@ -93,4 +98,4 @@ userSchema.methods.generateAccessToken = async function(){
   }, process.env.ACCESS_TOKEN_SECRET!, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY })
 }
 
-export const User = mongoose.model<IUser>("User", userSchema)
+export const User = mongoose.model<IUser, mongoose.Model<IUser, {}, IUserMethods>>("User", userSchema)
