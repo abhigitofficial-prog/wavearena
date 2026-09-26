@@ -56,3 +56,13 @@ export const loginUser = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "internal server error, Please try again later" });
   }
 }
+
+export const logoutUser = async (_req: Request, res: Response) => {
+  try {
+    res.clearCookie("accessToken");
+    res.redirect("/login");
+  } catch (err) {
+    console.error("Error logout controller:", (err as Error)?.message);
+    return res.status(500).json({ success: false, message: "internal server error" });
+  }
+}
