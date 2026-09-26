@@ -1203,7 +1203,7 @@ body{
 
 
 
-  <!-- ============================================================
+ <!-- ============================================================
      PAGE 4: ABOUT
      ============================================================ -->
 
@@ -1218,7 +1218,7 @@ body{
     <!-- UNIQUE CSS FOR ABOUT SECTION -->
     <!-- ========================================== -->
     <style>
-      /* Grid Layout for equal 2 columns */
+      /* Grid Layout for Top Section */
       .wa-about-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1226,9 +1226,22 @@ body{
         margin-top: 30px;
       }
 
+      /* Compact Wrapper for Cards */
+      .wa-cards-compact-wrapper {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        max-width: 650px;
+        margin: 0 auto;
+      }
+
       @media (max-width: 768px) {
         .wa-about-grid {
           grid-template-columns: 1fr;
+        }
+        .wa-cards-compact-wrapper {
+          flex-direction: column;
+          align-items: center;
         }
       }
 
@@ -1391,13 +1404,13 @@ body{
 
     <!-- Contact Section -->
     <div style="margin-top: 40px;">
-      <h3 style="font-size: 1.4rem; color: #ffffff; margin-bottom: 20px;">// Contact</h3>
+      <h3 style="font-size: 1.4rem; color: #ffffff; margin-bottom: 20px; text-align: center;">// Contact</h3>
 
-      <!-- 2 SEPARATE CONTAINER GRID -->
-      <div class="wa-about-grid" style="margin-top: 0;">
+      <!-- COMPACT 2 CARDS CONTAINER -->
+      <div class="wa-cards-compact-wrapper">
 
-        <!-- Container 1: My Profile -->
-        <article class="card" style="--accent:#823aff; width: 100%; margin: 0;" data-tilt data-url="https://example.com/My-profile">
+        <!-- Card 1: My Profile -->
+        <article class="card" style="--accent:#823aff; flex: 1; max-width: 310px; width: 100%; margin: 0;" data-tilt data-url="https://example.com/My-profile">
           <span class="brk tl"></span><span class="brk tr"></span>
           <span class="brk bl"></span><span class="brk br"></span>
           <span class="rarity">?</span>
@@ -1415,8 +1428,8 @@ body{
           </div>
         </article>
 
-        <!-- Container 2: Friend's Profile -->
-        <article class="card" style="--accent:#3fb950; width: 100%; margin: 0;" data-tilt data-url="https://example.com/Friend-profile">
+        <!-- Card 2: Friend's Profile -->
+        <article class="card" style="--accent:#3fb950; flex: 1; max-width: 310px; width: 100%; margin: 0;" data-tilt data-url="https://example.com/Friend-profile">
           <span class="brk tl"></span><span class="brk tr"></span>
           <span class="brk bl"></span><span class="brk br"></span>
           <span class="rarity">?</span>
