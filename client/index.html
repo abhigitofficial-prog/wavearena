@@ -1190,6 +1190,19 @@ body{
 </section>
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   <!-- ============================================================
      PAGE 4: ABOUT
      ============================================================ -->
@@ -1205,29 +1218,17 @@ body{
     <!-- UNIQUE CSS FOR ABOUT SECTION -->
     <!-- ========================================== -->
     <style>
-      /* Grid Layout */
+      /* Grid Layout for equal 2 columns */
       .wa-about-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 24px;
         margin-top: 30px;
       }
-      
-      /* Cards Container for Contact Section */
-      .wa-cards-wrapper {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        max-width: 750px;
-        margin: 0 auto;
-      }
 
       @media (max-width: 768px) {
         .wa-about-grid {
           grid-template-columns: 1fr;
-        }
-        .wa-cards-wrapper {
-          flex-direction: column;
         }
       }
 
@@ -1241,7 +1242,7 @@ body{
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         animation: waFadeInUp 0.8s ease-out forwards;
-        opacity: 0; /* Starts hidden for animation */
+        opacity: 0;
       }
 
       /* Staggered Animation Delay */
@@ -1388,23 +1389,23 @@ body{
       </div>
     </div>
 
-    <!-- Contact panel -->
-    <div class="about-panel" style="margin-top: 30px;">
-      <h3>// Contact</h3>
+    <!-- Contact Section -->
+    <div style="margin-top: 40px;">
+      <h3 style="font-size: 1.4rem; color: #ffffff; margin-bottom: 20px;">// Contact</h3>
 
-      <!-- ===== SEPARATE CARDS WRAPPER ===== -->
-      <div class="wa-cards-wrapper">
+      <!-- 2 SEPARATE CONTAINER GRID -->
+      <div class="wa-about-grid" style="margin-top: 0;">
 
-        <!-- First Separate Card -->
-        <article class="card" style="--accent:#823aff; flex: 1;" data-tilt data-url="https://example.com/Wave-paladin">
+        <!-- Container 1: My Profile -->
+        <article class="card" style="--accent:#823aff; width: 100%; margin: 0;" data-tilt data-url="https://example.com/My-profile">
           <span class="brk tl"></span><span class="brk tr"></span>
           <span class="brk bl"></span><span class="brk br"></span>
           <span class="rarity">?</span>
           <div class="img-wrap">
-            <img class="card-img" src="img/mini1.png" alt="Wave Paladin"
-                 onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
+            <img class="card-img" src="img/mini1.png" alt="My Profile"
+                 onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=MY+PROFILE'">
           </div>
-          <h2 class="name">Wave Operator</h2>
+          <h2 class="name">My Operator</h2>
           <p class="role">Aegis Vanguard</p>
           <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
           <div class="stats">
@@ -1414,28 +1415,26 @@ body{
           </div>
         </article>
 
-        <!-- Second Separate Card -->
-        <article class="card" style="--accent:#823aff; flex: 1;" data-tilt data-url="https://example.com/Wave-paladin">
+        <!-- Container 2: Friend's Profile -->
+        <article class="card" style="--accent:#3fb950; width: 100%; margin: 0;" data-tilt data-url="https://example.com/Friend-profile">
           <span class="brk tl"></span><span class="brk tr"></span>
           <span class="brk bl"></span><span class="brk br"></span>
           <span class="rarity">?</span>
           <div class="img-wrap">
-            <img class="card-img" src="img/mini1.png" alt="Wave Paladin"
-                 onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
+            <img class="card-img" src="img/mini1.png" alt="Friend Profile"
+                 onerror="this.src='https://placehold.co/600x800/04040a/3fb950?text=FRIEND+PROFILE'">
           </div>
-          <h2 class="name">Wave Operator</h2>
-          <p class="role">Aegis Vanguard</p>
-          <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
+          <h2 class="name">Friend Operator</h2>
+          <p class="role">Cyber Sentinel</p>
+          <p class="desc">Equipped with stealth capabilities and advanced threat mitigation protocols to protect allies in the field.</p>
           <div class="stats">
-            <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-            <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-            <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+            <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="95%"></i></div><span>95</span></div>
+            <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="98%"></i></div><span>98</span></div>
+            <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="92%"></i></div><span>92</span></div>
           </div>
         </article>
 
       </div>
-      <!-- ===== END CARDS WRAPPER ===== -->
-
     </div>
 
   </div>
