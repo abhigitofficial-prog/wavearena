@@ -1189,13 +1189,11 @@ body{
   </div>
 </section>
 
-<!-- ============================================================
+
+  <!-- ============================================================
      PAGE 4: ABOUT
      ============================================================ -->
 
-
-
-  
 <section id="about" class="page">
   <div class="page-inner">
     <div class="sec-head">
@@ -1203,251 +1201,260 @@ body{
       <p>// OPERATOR <b>PROFILE</b> //</p>
     </div>
 
+    <!-- ========================================== -->
+    <!-- UNIQUE CSS FOR ABOUT SECTION -->
+    <!-- ========================================== -->
+    <style>
+      /* Grid Layout */
+      .wa-about-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 30px;
+      }
+      
+      /* Cards Container for Contact Section */
+      .wa-cards-wrapper {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        max-width: 750px;
+        margin: 0 auto;
+      }
 
-
-
-
-
-
-
-          <!-- ========================================== -->
-      <!-- UNIQUE CSS FOR ABOUT SECTION -->
-      <!-- ========================================== -->
-      <style>
-        /* Grid Layout */
+      @media (max-width: 768px) {
         .wa-about-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 24px;
-          margin-top: 30px;
+          grid-template-columns: 1fr;
         }
-        @media (max-width: 768px) {
-          .wa-about-grid {
-            grid-template-columns: 1fr;
-          }
+        .wa-cards-wrapper {
+          flex-direction: column;
         }
+      }
 
-        /* Panel Design & Animation */
-        .wa-about-card {
-          background: rgba(22, 27, 34, 0.85);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(88, 166, 255, 0.2);
-          border-radius: 16px;
-          padding: 30px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          animation: waFadeInUp 0.8s ease-out forwards;
-          opacity: 0; /* Starts hidden for animation */
-        }
+      /* Panel Design & Animation */
+      .wa-about-card {
+        background: rgba(22, 27, 34, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(88, 166, 255, 0.2);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: waFadeInUp 0.8s ease-out forwards;
+        opacity: 0; /* Starts hidden for animation */
+      }
 
-        /* Staggered Animation Delay */
-        .wa-about-card:nth-child(1) { animation-delay: 0.1s; }
-        .wa-about-card:nth-child(2) { animation-delay: 0.3s; }
+      /* Staggered Animation Delay */
+      .wa-about-card:nth-child(1) { animation-delay: 0.1s; }
+      .wa-about-card:nth-child(2) { animation-delay: 0.3s; }
 
-        /* Hover Effect */
-        .wa-about-card:hover {
-          transform: translateY(-8px) scale(1.01);
-          border-color: #58a6ff;
-          box-shadow: 0 15px 40px rgba(88, 166, 255, 0.25);
-        }
+      /* Hover Effect */
+      .wa-about-card:hover {
+        transform: translateY(-8px) scale(1.01);
+        border-color: #58a6ff;
+        box-shadow: 0 15px 40px rgba(88, 166, 255, 0.25);
+      }
 
-        /* Heading */
-        .wa-about-card h3 {
-          font-size: 1.4rem;
-          margin-top: 0;
-          margin-bottom: 20px;
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .wa-about-card h3::before {
-          content: "//";
-          color: #3fb950;
-          font-family: monospace;
-          font-weight: bold;
-        }
+      /* Heading */
+      .wa-about-card h3 {
+        font-size: 1.4rem;
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .wa-about-card h3::before {
+        content: "//";
+        color: #3fb950;
+        font-family: monospace;
+        font-weight: bold;
+      }
 
-        /* Text & Glow */
-        .wa-about-card p {
-          color: #c9d1d9;
-          line-height: 1.8;
-          margin-bottom: 15px;
-          font-size: 0.95rem;
-        }
-        .wa-about-card b, .wa-about-card strong {
-          color: #ffffff;
-          text-shadow: 0 0 12px rgba(88, 166, 255, 0.4);
-        }
+      /* Text & Glow */
+      .wa-about-card p {
+        color: #c9d1d9;
+        line-height: 1.8;
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+      }
+      .wa-about-card b, .wa-about-card strong {
+        color: #ffffff;
+        text-shadow: 0 0 12px rgba(88, 166, 255, 0.4);
+      }
 
-        /* Tags/Pills */
-        .wa-tags-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-top: 25px;
-        }
-        .wa-tag-item {
-          background: rgba(88, 166, 255, 0.1);
-          color: #58a6ff;
-          border: 1px solid rgba(88, 166, 255, 0.3);
-          padding: 6px 16px;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          cursor: default;
-        }
-        .wa-tag-item:hover {
-          background: #58a6ff;
-          color: #0d1117;
-          transform: translateY(-3px) scale(1.05);
-          box-shadow: 0 5px 15px rgba(88, 166, 255, 0.4);
-        }
+      /* Tags/Pills */
+      .wa-tags-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 25px;
+      }
+      .wa-tag-item {
+        background: rgba(88, 166, 255, 0.1);
+        color: #58a6ff;
+        border: 1px solid rgba(88, 166, 255, 0.3);
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: default;
+      }
+      .wa-tag-item:hover {
+        background: #58a6ff;
+        color: #0d1117;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 5px 15px rgba(88, 166, 255, 0.4);
+      }
 
-        /* Rules List */
-        .wa-rules-list {
-          padding-left: 0;
-          list-style: none;
-          margin-top: 10px;
-        }
-        .wa-rules-list li {
-          position: relative;
-          padding-left: 25px;
-          margin-bottom: 14px;
-          color: #c9d1d9;
-          font-size: 0.95rem;
-          line-height: 1.6;
-          transition: color 0.3s ease;
-        }
-        .wa-rules-list li::before {
-          content: "▶";
-          position: absolute;
-          left: 0;
-          top: 3px;
-          color: #3fb950;
-          font-size: 0.8rem;
-          transition: transform 0.3s ease, color 0.3s ease;
-        }
-        .wa-rules-list li:hover {
-          color: #ffffff;
-        }
-        .wa-rules-list li:hover::before {
-          transform: translateX(6px);
-          color: #58a6ff;
-        }
+      /* Rules List */
+      .wa-rules-list {
+        padding-left: 0;
+        list-style: none;
+        margin-top: 10px;
+      }
+      .wa-rules-list li {
+        position: relative;
+        padding-left: 25px;
+        margin-bottom: 14px;
+        color: #c9d1d9;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        transition: color 0.3s ease;
+      }
+      .wa-rules-list li::before {
+        content: "▶";
+        position: absolute;
+        left: 0;
+        top: 3px;
+        color: #3fb950;
+        font-size: 0.8rem;
+        transition: transform 0.3s ease, color 0.3s ease;
+      }
+      .wa-rules-list li:hover {
+        color: #ffffff;
+      }
+      .wa-rules-list li:hover::before {
+        transform: translateX(6px);
+        color: #58a6ff;
+      }
 
-        /* Keyframes */
-        @keyframes waFadeInUp {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      </style>
+      /* Keyframes */
+      @keyframes waFadeInUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
 
-      <!-- ========================================== -->
-      <!-- HTML FOR ABOUT SECTION -->
-      <!-- ========================================== -->
-      <div class="wa-about-grid">
-        <!-- Bio panel -->
-        <div class="wa-about-card">
-          <h3>Welcome</h3>
-          <p>
-            Hey — welcome to <b>Wave Arena</b>. This platform is built for hackers, security researchers, and tech enthusiasts who believe in curiosity, learning, and responsible security.
-          </p>
-          <p>
-            We follow the rules, respect privacy, and do not allow spam. Our goal is to create a clean, useful, and legal space for people who want to learn, share, and grow in cybersecurity.
-          </p>
-          <p>
-            <b>Hackers are welcome here</b> — but only those who follow ethical and legal rules.
-          </p>
-          <div class="wa-tags-wrap">
-            <span class="wa-tag-item">Ethical Hacking</span>
-            <span class="wa-tag-item">No Spam</span>
-            <span class="wa-tag-item">Cybersecurity</span>
-            <span class="wa-tag-item">Security Research</span>
-          </div>
-        </div>
-
-        <!-- Rules panel -->
-        <div class="wa-about-card">
-          <h3>Our Rules</h3>
-          <ul class="wa-rules-list">
-            <li><strong>No spam.</strong> No unwanted ads, bulk messages, fake links, or promotional flooding.</li>
-            <li><strong>No illegal activity.</strong> Do not use this site to plan, promote, or perform unauthorized access, attacks, or data theft.</li>
-            <li><strong>Respect others.</strong> No harassment, hate speech, or harmful content.</li>
-            <li><strong>Follow the law.</strong> You are responsible for complying with all applicable laws and regulations.</li>
-            <li><strong>Responsible disclosure.</strong> If you find a vulnerability, report it privately and responsibly.</li>
-          </ul>
-          <p style="margin-top: 20px; font-size: 0.9rem; color: #8b949e;">
-            <b style="color: #58a6ff;">Our Commitment:</b> We do not support malicious hacking. We support ethical hacking, learning, and responsible security research.
-          </p>
+    <!-- ========================================== -->
+    <!-- HTML FOR ABOUT SECTION -->
+    <!-- ========================================== -->
+    <div class="wa-about-grid">
+      <!-- Bio panel -->
+      <div class="wa-about-card">
+        <h3>Welcome</h3>
+        <p>
+          Hey — welcome to <b>Wave Arena</b>. This platform is built for hackers, security researchers, and tech enthusiasts who believe in curiosity, learning, and responsible security.
+        </p>
+        <p>
+          We follow the rules, respect privacy, and do not allow spam. Our goal is to create a clean, useful, and legal space for people who want to learn, share, and grow in cybersecurity.
+        </p>
+        <p>
+          <b>Hackers are welcome here</b> — but only those who follow ethical and legal rules.
+        </p>
+        <div class="wa-tags-wrap">
+          <span class="wa-tag-item">Ethical Hacking</span>
+          <span class="wa-tag-item">No Spam</span>
+          <span class="wa-tag-item">Cybersecurity</span>
+          <span class="wa-tag-item">Security Research</span>
         </div>
       </div>
+
+      <!-- Rules panel -->
+      <div class="wa-about-card">
+        <h3>Our Rules</h3>
+        <ul class="wa-rules-list">
+          <li><strong>No spam.</strong> No unwanted ads, bulk messages, fake links, or promotional flooding.</li>
+          <li><strong>No illegal activity.</strong> Do not use this site to plan, promote, or perform unauthorized access, attacks, or data theft.</li>
+          <li><strong>Respect others.</strong> No harassment, hate speech, or harmful content.</li>
+          <li><strong>Follow the law.</strong> You are responsible for complying with all applicable laws and regulations.</li>
+          <li><strong>Responsible disclosure.</strong> If you find a vulnerability, report it privately and responsibly.</li>
+        </ul>
+        <p style="margin-top: 20px; font-size: 0.9rem; color: #8b949e;">
+          <b style="color: #58a6ff;">Our Commitment:</b> We do not support malicious hacking. We support ethical hacking, learning, and responsible security research.
+        </p>
+      </div>
+    </div>
+
+    <!-- Contact panel -->
+    <div class="about-panel" style="margin-top: 30px;">
+      <h3>// Contact</h3>
+
+      <!-- ===== SEPARATE CARDS WRAPPER ===== -->
+      <div class="wa-cards-wrapper">
+
+        <!-- First Separate Card -->
+        <article class="card" style="--accent:#823aff; flex: 1;" data-tilt data-url="https://example.com/Wave-paladin">
+          <span class="brk tl"></span><span class="brk tr"></span>
+          <span class="brk bl"></span><span class="brk br"></span>
+          <span class="rarity">?</span>
+          <div class="img-wrap">
+            <img class="card-img" src="img/mini1.png" alt="Wave Paladin"
+                 onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
+          </div>
+          <h2 class="name">Wave Operator</h2>
+          <p class="role">Aegis Vanguard</p>
+          <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
+          <div class="stats">
+            <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+            <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+            <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          </div>
+        </article>
+
+        <!-- Second Separate Card -->
+        <article class="card" style="--accent:#823aff; flex: 1;" data-tilt data-url="https://example.com/Wave-paladin">
+          <span class="brk tl"></span><span class="brk tr"></span>
+          <span class="brk bl"></span><span class="brk br"></span>
+          <span class="rarity">?</span>
+          <div class="img-wrap">
+            <img class="card-img" src="img/mini1.png" alt="Wave Paladin"
+                 onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
+          </div>
+          <h2 class="name">Wave Operator</h2>
+          <p class="role">Aegis Vanguard</p>
+          <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
+          <div class="stats">
+            <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+            <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+            <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          </div>
+        </article>
+
+      </div>
+      <!-- ===== END CARDS WRAPPER ===== -->
+
+    </div>
+
+  </div>
+</section>
+
+
+
   
 
 
 
 
-      
 
 
 
-      
-      <!-- Contact panel -->
-     <div class="about-panel">
-  <h3>// Contact</h3>
 
-  <!-- ===== SINGLE KNIGHT-STYLE CONTAINER ===== -->
-  <article class="card" style="--accent:#823aff; display: flex; gap: 20px; max-width: 750px; margin: 0 auto;" data-tilt data-url="https://example.com/Wave-paladin">
 
-    <!-- First Part -->
-    <div class="op1" style="flex: 1;">
-      <span class="brk tl"></span><span class="brk tr"></span>
-      <span class="brk bl"></span><span class="brk br"></span>
-      <span class="rarity">?</span>
-      <div class="img-wrap">
-        <img class="card-img" src="img/mini1.png" alt="Wave Paladin"
-             onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
-      </div>
-      <h2 class="name">Wave Operator</h2>
-      <p class="role">Aegis Vanguard</p>
-      <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
-      <div class="stats">
-        <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-        <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-        <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-      </div>
-    </div>
 
-    <!-- Second Part -->
-    <div class="op2" style="flex: 1;">
-      <span class="brk tl"></span><span class="brk tr"></span>
-      <span class="brk bl"></span><span class="brk br"></span>
-      <span class="rarity">?</span>
-      <div class="img-wrap">
-        <img class="card-img" src="img/mini1.png" alt="Wave Paladin"
-             onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=KNIGHT+01'">
-      </div>
-      <h2 class="name">Wave Operator</h2>
-      <p class="role">Aegis Vanguard</p>
-      <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
-      <div class="stats">
-        <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-        <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-        <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-      </div>
-    </div>  
-    
-  </article>
-
-  <!-- ===== END SINGLE CONTAINER ===== -->
-
-</div>
-
-    </div>
-  </div>
-</section>
-
+  
 <script>
 /* ============================================================
    1. PAGE SWITCHING LOGIC (No Scroll between pages)
