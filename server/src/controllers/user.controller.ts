@@ -6,7 +6,7 @@ export const registerUser = async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, userName, email, password } = req.body;
     
-    if ([firstName, lastName, email, password].some(
+    if ([firstName, email, password].some(
           (value) => !value || typeof value !== "string" || value.trim() === ""
         )) {
       return res.status(400).json({ success: false, message: "Required fields cannot  be empty" })
@@ -53,11 +53,11 @@ export const loginUser = async (req: Request, res: Response) => {
       ],
     });
     
-    if (!user) return res.status(400).json({ success: true, message: "invalid credentials" });
+    if (!user) return res.status(400).json({ success: false, message: "invalid credentials" });
 
     // compare db stored password with user provided password
     const isPasswordCorrect = await user.isPasswordCorrect(password);
-    if (!isPasswordCorrect) return res.status(400).json({ success: true, message: "invalid credentials" });
+    if (!isPasswordCorrect) return res.status(400).json({ success: false, message: "invalid credentials" });
 
     // generate access token ans store inside cookie
     const accessToken = await user.generateAccessToken();
@@ -72,7 +72,7 @@ export const loginUser = async (req: Request, res: Response) => {
 export const logoutUser = async (_req: Request, res: Response) => {
   try {
     res.clearCookie("accessToken");
-    res.redirect("/login");
+    return res.status(200).json({ success: true, message: "Logout successfully" });
   } catch (err) {
     console.error("Error logout controller:", (err as Error)?.message);
     return res.status(500).json({ success: false, message: "internal server error" });

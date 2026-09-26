@@ -51,8 +51,7 @@ const userSchema = new mongoose.Schema<IUser, {}, IUserMethods>({
     lowercase: true,
     required: [true, "Email is required"],
     unique: [true, "Another account with this email is exist"],
-    // minlength: [5, "email must have at least 5 characters"],
-    // maxlength: [20, "email can have at most 20 characters"],
+    maxlength: [50, "email can have at most 50 characters"],
   },
   password: {
     type: String,
