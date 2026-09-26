@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 export interface IUser {
@@ -17,7 +17,12 @@ export interface IUser {
   updatedAt: Date;
 }
 
-const userSchema = new mongoose.Schema({
+export interface IUserMethods {
+  isPasswordCorrect(password: string): Promise<boolean>;
+  generateAccessToken(): Promise<string>;
+}
+
+const userSchema = new mongoose.Schema<IUser, {}, IUserMethods>({
   firstName: {
     type: String,
     trim: true,
@@ -52,7 +57,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     trim: true,
-    lowercase: true,
     required: [true, "Password is required"],
     minlength: [8, "Password must have at least 5 characters"],
     maxlength: [20, "Password can have at most 20 characters"],
@@ -90,7 +94,7 @@ userSchema.methods.generateAccessToken = async function(){
     userId: this._id,
     email: this.email,
     userName: this.userName,
-  }, process.env.ACCESS_TOKEN_SECRET!, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY })
+  }, process.env.ACCESS_TOKEN_SECRET!, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY as SignOptions["expiresIn"]})
 }
 
-export const User = mongoose.model<IUser>("User", userSchema)
+export const User = mongoose.model<IUser, mongoose.Model<IUser, {}, IUserMethods>>("User", userSchema)

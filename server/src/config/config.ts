@@ -1,4 +1,5 @@
 import { Config } from "../types/config.js"
+import type { CookieOptions } from "express";
 
 export const config: Config = {
   port: process.env.PORT as string,
@@ -8,10 +9,10 @@ export const config: Config = {
   accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY as string,
 };
 
-export const cookieOptions = {
+export const cookieOptions: CookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax",
-  maxAge: 60 * 60 * 24 * 7,
+  maxAge: 60 * 60 * 1000 * 24 * 7, // 7 days
   path: "/",
 };
