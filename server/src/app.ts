@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import userRoutes from "./routes/user.routes.js";
 
 const app = express();
 const appOrigin = process.env.APP_ORIGIN;
@@ -15,6 +16,8 @@ app.use(express.urlencoded({
   extended: true,
 }));
 app.use(cookieParser());
+
+app.use("/api/v1/auth", userRoutes);
 
 // health check route
 app.get("/health", (_, res) => {

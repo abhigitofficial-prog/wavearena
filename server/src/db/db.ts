@@ -8,7 +8,7 @@ export async function connectDatabase() {
   }
   
   try {
-    mongoose.connect(connectionString)
+    await mongoose.connect(connectionString)
     console.log("Database connected")
   } catch (err) {
     console.error("Error connecting database:", (err as Error)?.message)
