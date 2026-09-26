@@ -51,7 +51,7 @@ export const loginUser = async (req: Request, res: Response) => {
         ...(userName ? [{ userName }] : []),
         ...(email ? [{ email }] : []),
       ],
-    });
+    }).select("+password");
     
     if (!user) return res.status(400).json({ success: false, message: "invalid credentials" });
 
@@ -76,5 +76,27 @@ export const logoutUser = async (_req: Request, res: Response) => {
   } catch (err) {
     console.error("Error logout controller:", (err as Error)?.message);
     return res.status(500).json({ success: false, message: "internal server error" });
+  }
+}
+
+export const changePassword = async (req: Request, res: Response) => {
+  const { oldPassword, newPassword } = req.body;
+  
+  if ([oldPassword, newPassword].some(
+    (value) => !value || typeof value !== "string" || value.trim() === ""
+  )) return res.status(400).json({ success: false, message: "Provide required fields" });
+
+  try {
+    const user = await User.findById(req.user?._id).select("+password");
+    if (!user) return res.status(401).json({ success: false, message: "unauthorized" });
+
+    const isCorrectPassword = await user.isPasswordCorrect(oldPassword);
+    if (!isCorrectPassword) return res.status(401).json({ success: false, message: "unauthorized" });
+    user.password = newPassword;
+    await user.save();
+    return res.status(200).json({ success: true, message: "password changed" });
+  } catch (err) {
+    console.error("Error changing password in user controller:", (err as Error)?.message);
+    return res.status(500).json({ success: false, message: "internal server error, Try again later" });
   }
 }
