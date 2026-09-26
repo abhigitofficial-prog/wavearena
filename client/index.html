@@ -1203,7 +1203,7 @@ body{
 
 
 
- <!-- ============================================================
+<!-- ============================================================
      PAGE 4: ABOUT
      ============================================================ -->
 
@@ -1215,7 +1215,7 @@ body{
     </div>
 
     <!-- ========================================== -->
-    <!-- UNIQUE CSS FOR ABOUT SECTION -->
+    <!-- UNIQUE CSS FOR ABOUT & CONTACT SECTION -->
     <!-- ========================================== -->
     <style>
       /* Grid Layout for Top Section */
@@ -1226,26 +1226,7 @@ body{
         margin-top: 30px;
       }
 
-      /* Compact Wrapper for Cards */
-      .wa-cards-compact-wrapper {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        max-width: 650px;
-        margin: 0 auto;
-      }
-
-      @media (max-width: 768px) {
-        .wa-about-grid {
-          grid-template-columns: 1fr;
-        }
-        .wa-cards-compact-wrapper {
-          flex-direction: column;
-          align-items: center;
-        }
-      }
-
-      /* Panel Design & Animation */
+      /* Panel Design & Animation for About Section */
       .wa-about-card {
         background: rgba(22, 27, 34, 0.85);
         backdrop-filter: blur(12px);
@@ -1258,18 +1239,15 @@ body{
         opacity: 0;
       }
 
-      /* Staggered Animation Delay */
       .wa-about-card:nth-child(1) { animation-delay: 0.1s; }
       .wa-about-card:nth-child(2) { animation-delay: 0.3s; }
 
-      /* Hover Effect */
       .wa-about-card:hover {
         transform: translateY(-8px) scale(1.01);
         border-color: #58a6ff;
         box-shadow: 0 15px 40px rgba(88, 166, 255, 0.25);
       }
 
-      /* Heading */
       .wa-about-card h3 {
         font-size: 1.4rem;
         margin-top: 0;
@@ -1286,7 +1264,6 @@ body{
         font-weight: bold;
       }
 
-      /* Text & Glow */
       .wa-about-card p {
         color: #c9d1d9;
         line-height: 1.8;
@@ -1298,7 +1275,6 @@ body{
         text-shadow: 0 0 12px rgba(88, 166, 255, 0.4);
       }
 
-      /* Tags/Pills */
       .wa-tags-wrap {
         display: flex;
         flex-wrap: wrap;
@@ -1323,7 +1299,6 @@ body{
         box-shadow: 0 5px 15px rgba(88, 166, 255, 0.4);
       }
 
-      /* Rules List */
       .wa-rules-list {
         padding-left: 0;
         list-style: none;
@@ -1355,7 +1330,130 @@ body{
         color: #58a6ff;
       }
 
-      /* Keyframes */
+      /* ========================================== */
+      /* NEW CUSTOM COMPACT OPERATOR CARDS CSS */
+      /* ========================================== */
+      .wa-contact-wrapper {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        max-width: 480px; /* পুরো কন্টেইনার একদম ছোট সাইজ */
+        margin: 0 auto;
+      }
+
+      .wa-op-card {
+        flex: 1;
+        max-width: 220px; /* প্রতিটি কার্ডের সুনির্দিষ্ট ছোট চওড়া */
+        background: rgba(15, 18, 25, 0.9);
+        border: 1px solid var(--accent-color, #823aff);
+        border-radius: 12px;
+        padding: 12px;
+        box-sizing: border-box;
+        position: relative;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .wa-op-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(130, 58, 255, 0.3);
+      }
+
+      .wa-op-rarity {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+
+      .wa-op-img-box {
+        width: 100%;
+        height: 140px; /* ছবির উচ্চতা নিয়ন্ত্রণ */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 8px;
+        margin-top: 15px;
+        margin-bottom: 10px;
+      }
+
+      .wa-op-img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+      }
+
+      .wa-op-name {
+        font-size: 0.9rem !important;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 4px 0 2px 0;
+        text-transform: uppercase;
+      }
+
+      .wa-op-role {
+        font-size: 0.75rem !important;
+        color: #58a6ff;
+        margin: 0 0 6px 0;
+      }
+
+      .wa-op-desc {
+        font-size: 0.7rem !important;
+        color: #8b949e;
+        line-height: 1.3;
+        margin-bottom: 10px;
+      }
+
+      .wa-op-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .wa-op-stat-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.68rem;
+        color: #c9d1d9;
+        font-weight: 600;
+      }
+
+      .wa-op-stat-row span:first-child {
+        width: 26px;
+      }
+
+      .wa-op-bar-bg {
+        flex: 1;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .wa-op-bar-fill {
+        height: 100%;
+        background: var(--accent-color, #823aff);
+        border-radius: 3px;
+      }
+
+      @media (max-width: 768px) {
+        .wa-about-grid {
+          grid-template-columns: 1fr;
+        }
+        .wa-contact-wrapper {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+
       @keyframes waFadeInUp {
         from { opacity: 0; transform: translateY(40px); }
         to { opacity: 1; transform: translateY(0); }
@@ -1404,48 +1502,44 @@ body{
 
     <!-- Contact Section -->
     <div style="margin-top: 40px;">
-      <h3 style="font-size: 1.4rem; color: #ffffff; margin-bottom: 20px; text-align: center;">// Contact</h3>
+      <h3 style="font-size: 1.2rem; color: #ffffff; margin-bottom: 15px; text-align: center;">// Contact</h3>
 
-      <!-- COMPACT 2 CARDS CONTAINER -->
-      <div class="wa-cards-compact-wrapper">
+      <!-- FULLY ISOLATED COMPACT CARDS -->
+      <div class="wa-contact-wrapper">
 
         <!-- Card 1: My Profile -->
-        <article class="card" style="--accent:#823aff; flex: 1; max-width: 310px; width: 100%; margin: 0;" data-tilt data-url="https://example.com/My-profile">
-          <span class="brk tl"></span><span class="brk tr"></span>
-          <span class="brk bl"></span><span class="brk br"></span>
-          <span class="rarity">?</span>
-          <div class="img-wrap">
-            <img class="card-img" src="img/mini1.png" alt="My Profile"
+        <div class="wa-op-card" style="--accent-color:#823aff;" data-tilt data-url="https://example.com/My-profile">
+          <span class="wa-op-rarity">?</span>
+          <div class="wa-op-img-box">
+            <img class="wa-op-img" src="img/mini1.png" alt="My Profile"
                  onerror="this.src='https://placehold.co/600x800/04040a/00f3ff?text=MY+PROFILE'">
           </div>
-          <h2 class="name">My Operator</h2>
-          <p class="role">Aegis Vanguard</p>
-          <p class="desc">Clad in reactive nano-armor, she projects an impenetrable light barrier that reflects kinetic energy back at her foes.</p>
-          <div class="stats">
-            <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-            <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
-            <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="99%"></i></div><span>99</span></div>
+          <h2 class="wa-op-name">My Operator</h2>
+          <p class="wa-op-role">Aegis Vanguard</p>
+          <p class="wa-op-desc">Clad in reactive nano-armor, she projects light barrier.</p>
+          <div class="wa-op-stats">
+            <div class="wa-op-stat-row"><span>PWR</span><div class="wa-op-bar-bg"><div class="wa-op-bar-fill" style="width: 99%;"></div></div><span>99</span></div>
+            <div class="wa-op-stat-row"><span>SPD</span><div class="wa-op-bar-bg"><div class="wa-op-bar-fill" style="width: 99%;"></div></div><span>99</span></div>
+            <div class="wa-op-stat-row"><span>DEF</span><div class="wa-op-bar-bg"><div class="wa-op-bar-fill" style="width: 99%;"></div></div><span>99</span></div>
           </div>
-        </article>
+        </div>
 
         <!-- Card 2: Friend's Profile -->
-        <article class="card" style="--accent:#3fb950; flex: 1; max-width: 310px; width: 100%; margin: 0;" data-tilt data-url="https://example.com/Friend-profile">
-          <span class="brk tl"></span><span class="brk tr"></span>
-          <span class="brk bl"></span><span class="brk br"></span>
-          <span class="rarity">?</span>
-          <div class="img-wrap">
-            <img class="card-img" src="img/mini1.png" alt="Friend Profile"
+        <div class="wa-op-card" style="--accent-color:#3fb950;" data-tilt data-url="https://example.com/Friend-profile">
+          <span class="wa-op-rarity">?</span>
+          <div class="wa-op-img-box">
+            <img class="wa-op-img" src="img/mini1.png" alt="Friend Profile"
                  onerror="this.src='https://placehold.co/600x800/04040a/3fb950?text=FRIEND+PROFILE'">
           </div>
-          <h2 class="name">Friend Operator</h2>
-          <p class="role">Cyber Sentinel</p>
-          <p class="desc">Equipped with stealth capabilities and advanced threat mitigation protocols to protect allies in the field.</p>
-          <div class="stats">
-            <div class="stat"><span>PWR</span><div class="bar"><i class="fill" data-w="95%"></i></div><span>95</span></div>
-            <div class="stat"><span>SPD</span><div class="bar"><i class="fill" data-w="98%"></i></div><span>98</span></div>
-            <div class="stat"><span>DEF</span><div class="bar"><i class="fill" data-w="92%"></i></div><span>92</span></div>
+          <h2 class="wa-op-name">Friend Operator</h2>
+          <p class="wa-op-role">Cyber Sentinel</p>
+          <p class="wa-op-desc">Equipped with stealth capabilities & threat mitigation.</p>
+          <div class="wa-op-stats">
+            <div class="wa-op-stat-row"><span>PWR</span><div class="wa-op-bar-bg"><div class="wa-op-bar-fill" style="width: 95%;"></div></div><span>95</span></div>
+            <div class="wa-op-stat-row"><span>SPD</span><div class="wa-op-bar-bg"><div class="wa-op-bar-fill" style="width: 98%;"></div></div><span>98</span></div>
+            <div class="wa-op-stat-row"><span>DEF</span><div class="wa-op-bar-bg"><div class="wa-op-bar-fill" style="width: 92%;"></div></div><span>92</span></div>
           </div>
-        </article>
+        </div>
 
       </div>
     </div>
