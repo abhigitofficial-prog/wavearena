@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { User } from "../models/user.model.js";
 import { cookieOptions } from "../config/config.js"
 
+// user registration business logic
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, userName, email, password } = req.body;
@@ -29,6 +30,7 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 }
 
+// user login business logic
 export const loginUser = async (req: Request, res: Response) => {
   const { userName, email, password } = req.body;
 
@@ -73,6 +75,7 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 }
 
+// user logout functionality
 export const logoutUser = async (_req: Request, res: Response) => {
   try {
     res.clearCookie("accessToken");
@@ -83,6 +86,7 @@ export const logoutUser = async (_req: Request, res: Response) => {
   }
 }
 
+// change password of current loggedin user
 export const changePassword = async (req: Request, res: Response) => {
   const { currentPassword, newPassword } = req.body;
   

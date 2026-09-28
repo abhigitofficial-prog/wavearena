@@ -4,12 +4,15 @@ import { config } from "../config/config.js";
 import { decodedToken } from "../types/token.js"
 import { User } from "../models/user.model.js";
 
+// veify the jwt token before grant access to protected routes
 export async function verifyJWT(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
   if (!token) return res.status(401).json({ status: false, message: "Unauthorized" });
 
   try {
+    // decode the token
     const decodedToken = jwt.verify(token, config.accessTokenSecret!) as decodedToken;
+    // fetch the current user from decoded userid
     const user = await User.findById(decodedToken?.userId);
     
     if (!user) {

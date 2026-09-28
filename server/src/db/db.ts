@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { config } from "../config/config.js"
 
+// database connection stablish
 export async function connectDatabase() {
   const connectionString: string = config.databaseURL as string;
   if (!connectionString) {

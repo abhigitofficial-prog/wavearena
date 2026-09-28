@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+// user model interface
 export interface IUser {
   firstName: string;
   lastName?: string;
@@ -17,11 +18,13 @@ export interface IUser {
   updatedAt: Date;
 }
 
+// injected methods interface
 export interface IUserMethods {
   isPasswordCorrect(password: string): Promise<boolean>;
   generateAccessToken(): Promise<string>;
 }
 
+// user schema
 const userSchema = new mongoose.Schema<IUser, {}, IUserMethods>({
   firstName: {
     type: String,

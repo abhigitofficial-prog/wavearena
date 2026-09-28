@@ -4,8 +4,9 @@ import { registerUser, loginUser, logoutUser, changePassword } from "../controll
 
 const router = express.Router();
 
-router.route("/register").post(registerUser);
-router.route("/login").post(loginUser);
-router.route("/logout").post(verifyJWT, logoutUser);
-router.route("/change-password").post(verifyJWT, changePassword);
+router.route("/register").post(registerUser); // user registration
+router.route("/login").post(loginUser); // user login
+router.route("/logout").post(verifyJWT, logoutUser); // user logout
+router.route("/change-password").post(verifyJWT, changePassword); // change password of current loggedin user
+
 export default router;
