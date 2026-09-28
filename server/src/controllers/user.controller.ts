@@ -6,7 +6,7 @@ export const registerUser = async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, userName, email, password } = req.body;
     
-    if ([firstName, email, password].some(
+    if ([firstName, lastName, userName, email, password].some(
           (value) => !value || typeof value !== "string" || value.trim() === ""
         )) {
       return res.status(400).json({ success: false, message: "Required fields cannot  be empty" })
@@ -62,7 +62,7 @@ export const loginUser = async (req: Request, res: Response) => {
     // generate access token ans store inside cookie
     const accessToken = await user.generateAccessToken();
     res.cookie("accessToken", accessToken, cookieOptions);
-    return res.status(200).json({ success: true, message: "login successfully" })
+    return res.status(200).json({ success: true, user: user, message: "login successfully" })
   } catch (err) {
     console.error("Error in user login controller:", (err as Error)?.message);
     return res.status(500).json({ success: false, message: "internal server error, Please try again later" });
@@ -80,9 +80,9 @@ export const logoutUser = async (_req: Request, res: Response) => {
 }
 
 export const changePassword = async (req: Request, res: Response) => {
-  const { oldPassword, newPassword } = req.body;
+  const { currentPassword, newPassword } = req.body;
   
-  if ([oldPassword, newPassword].some(
+  if ([currentPassword, newPassword].some(
     (value) => !value || typeof value !== "string" || value.trim() === ""
   )) return res.status(400).json({ success: false, message: "Provide required fields" });
 
@@ -90,7 +90,7 @@ export const changePassword = async (req: Request, res: Response) => {
     const user = await User.findById(req.user?._id).select("+password");
     if (!user) return res.status(401).json({ success: false, message: "unauthorized" });
 
-    const isCorrectPassword = await user.isPasswordCorrect(oldPassword);
+    const isCorrectPassword = await user.isPasswordCorrect(currentPassword);
     if (!isCorrectPassword) return res.status(401).json({ success: false, message: "unauthorized" });
     user.password = newPassword;
     await user.save();
