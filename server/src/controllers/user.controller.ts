@@ -62,7 +62,11 @@ export const loginUser = async (req: Request, res: Response) => {
     // generate access token ans store inside cookie
     const accessToken = await user.generateAccessToken();
     res.cookie("accessToken", accessToken, cookieOptions);
-    return res.status(200).json({ success: true, user: user, message: "login successfully" })
+
+    // remove password from user object before sending response
+    const { password: _password, ...userObject } = user.toObject();
+
+    return res.status(200).json({ success: true, user: userObject, message: "login successfully" })
   } catch (err) {
     console.error("Error in user login controller:", (err as Error)?.message);
     return res.status(500).json({ success: false, message: "internal server error, Please try again later" });
