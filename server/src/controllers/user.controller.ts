@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { User } from "../models/user.model.js";
 import { cookieOptions } from "../config/config.js"
 import { sendVerificationEmail } from "../utils/mail.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 // user registration business logic
 export const registerUser = async (req: Request, res: Response) => {
@@ -115,3 +116,66 @@ export const changePassword = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "internal server error, Try again later" });
   }
 }
+
+export const changeProfilePicture = async (req: Request, res: Response) => {
+  try {
+    if (!req.files) {
+      return res.status(400).json({ success: false, message: "No files were uploaded." });
+    }
+
+    const file = req.files.profilePicture;
+
+    if (!file || Array.isArray(file)) {
+      return res.status(400).json({ success: false, message: "upload only a single image under 5 MB" });
+    }
+
+    // Validate file type
+    const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      return res.status(400).json({ success: false, message: "Invalid file type. Only jpg, jpeg, png, and webp are allowed." });
+    }
+
+    // Fetch the user to get the current avatar publicId
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    const oldPublicId = user.avatar?.publicId;
+
+    // Move uploaded file to /tmp using express-fileupload's built-in mv()
+    const tmpFilePath = `/tmp/${Date.now()}-${file.name}`;
+    await file.mv(tmpFilePath);
+
+    // Upload to Cloudinary
+    const cloudinaryRes = await uploadToCloudinary(tmpFilePath);
+
+    if (!cloudinaryRes) {
+      return res.status(500).json({ success: false, message: "Failed to upload image. Please try again." });
+    }
+
+    // Update user's avatar in database
+    user.avatar = {
+      url: cloudinaryRes.secure_url,
+      publicId: cloudinaryRes.public_id,
+    };
+    await user.save();
+
+    // Delete the old image from Cloudinary after successful update
+    if (oldPublicId) {
+      await deleteFromCloudinary(oldPublicId);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture updated successfully",
+      avatar: {
+        url: cloudinaryRes.secure_url,
+        publicId: cloudinaryRes.public_id,
+      },
+    });
+  } catch (err) {
+    console.error("Error changing profile picture:", (err as Error)?.message);
+    return res.status(500).json({ success: false, message: "Internal server error. Please try again later." });
+  }
+};

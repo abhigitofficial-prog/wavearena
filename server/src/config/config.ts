@@ -9,6 +9,11 @@ export const config: Config = {
   accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY as string,
   smtp_user: process.env.SMTP_USER as string,
   smtp_password: process.env.SMTP_PASS as string,
+  cloudinary: {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
+    api_key: process.env.CLOUDINARY_API_KEY as string,
+    api_secret: process.env.CLOUDINARY_API_SECRET as string,
+  }
 };
 
 export const cookieOptions: CookieOptions = {
