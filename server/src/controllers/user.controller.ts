@@ -117,6 +117,7 @@ export const changePassword = async (req: Request, res: Response) => {
   }
 }
 
+// update  user profile picture
 export const changeProfilePicture = async (req: Request, res: Response) => {
   try {
     if (!req.files) {
@@ -179,3 +180,15 @@ export const changeProfilePicture = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Internal server error. Please try again later." });
   }
 };
+
+// fetch current loggedin user
+export const getCurrentUser = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.user?._id);
+    if (!user) return res.status(400).json({ success: false, message: "Invalid token, Please login again." });
+    return res.status(200).json({ success: true, message: "user fetched successfully", currentUser: user });
+  } catch (err) {
+    console.error("Error fetching current user", (err as Error)?.message);
+    return res.status(500).json({ success: false, message: "Failed to fetch user details" });
+  }
+}
