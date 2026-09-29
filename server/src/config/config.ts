@@ -7,6 +7,8 @@ export const config: Config = {
   databaseURL: process.env.MONGODB_URI as string,
   accessTokenSecret: process.env.ACCESS_TOKEN_SECRET as string,
   accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY as string,
+  smtp_user: process.env.SMTP_USER as string,
+  smtp_password: process.env.SMTP_PASS as string,
 };
 
 export const cookieOptions: CookieOptions = {

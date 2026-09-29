@@ -4,4 +4,6 @@ export type Config = {
   databaseURL: string;
   accessTokenSecret: string;
   accessTokenExpiry: string;
+  smtp_user: string;
+  smtp_password: string;
 };
