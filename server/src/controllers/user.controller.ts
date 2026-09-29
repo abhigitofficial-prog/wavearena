@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { User } from "../models/user.model.js";
 import { cookieOptions } from "../config/config.js"
+import { sendVerificationEmail } from "../utils/mail.js";
 
 // user registration business logic
 export const registerUser = async (req: Request, res: Response) => {
@@ -18,6 +19,12 @@ export const registerUser = async (req: Request, res: Response) => {
 
     const createdUser = await User.create({ firstName, lastName, userName, email, password });
     if (!createdUser) return res.status(503).json({ success: false, message: "Failed to create user, Try again later" });
+
+    // send verification email with OTP
+    const otp = await sendVerificationEmail(email, firstName);
+    if (otp) {
+      console.log(`[OTP for ${email}]:`, otp);
+    }
 
     const accessToken = await createdUser.generateAccessToken();
     await createdUser.save({ validateBeforeSave: false });
