@@ -7,7 +7,8 @@ import {
   changePassword,
   changeProfilePicture,
   getCurrentUser,
-  verifyOTP
+  verifyOTP,
+  resendOTP
 } from "../controllers/user.controller.js"
 
 const router = express.Router();
@@ -18,6 +19,7 @@ router.route("/logout").post(verifyJWT, logoutUser); // user logout
 router.route("/change-password").post(verifyJWT, changePassword); // change password of current loggedin user
 router.route("/change-profile-picture").post(verifyJWT, changeProfilePicture); // change user profile picture
 router.route("/me").get(verifyJWT, getCurrentUser); // get current logged in user
-router.route("/verify-user").post(verifyOTP);
+router.route("/verify-user").post(verifyOTP); // verify otp
+router.route("/resend-otp").post(resendOTP); // resend otp
 
 export default router;
