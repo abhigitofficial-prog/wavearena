@@ -215,3 +215,17 @@ export const verifyOTP = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Internal server error, Try again later" });
   }
 }
+
+// resend otp
+export const resendOTP = async (req: Request, res: Response) => {
+  const { email, firstName } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: "please provide an email addess" });
+  // const user = await User.findOne({ email });
+  // if (!user) return res.status(400).json({ success: false, message: "could not found the user" });
+  const newOtp = await sendVerificationEmail(email, firstName ?? "there"); // avoiding unnecessary db call
+  if (!newOtp) return res.status(503).json({ success: false, message: "failed to send otp, Please try again later" });
+  const redisOtp = await redis.get(`otp:${email}`);
+  if (redisOtp) await redis.del(`otp:${email}`);
+  await redis.set(`otp:${email}`, newOtp, { EX: 600 }); // 10 min expiry
+  return res.status(200).json({ success: true, message: "otp send successfully" });
+}
