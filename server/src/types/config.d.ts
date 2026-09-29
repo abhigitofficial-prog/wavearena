@@ -6,6 +6,13 @@ export type Cloudinary = {
   api_secret: string;
 }
 
+export type RedisClient = {
+  host: string;
+  port: string;
+  username: string;
+  password: string;
+}
+
 export type Config = {
   port: string;
   appOrigin: string;
@@ -15,4 +22,5 @@ export type Config = {
   smtp_user: string;
   smtp_password: string;
   cloudinary: Cloudinary;
+  redis: RedisClient;
 };

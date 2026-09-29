@@ -13,6 +13,12 @@ export const config: Config = {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
     api_key: process.env.CLOUDINARY_API_KEY as string,
     api_secret: process.env.CLOUDINARY_API_SECRET as string,
+  },
+  redis: {
+    host: process.env.REDIS_HOST as string,
+    port: process.env.REDIS_PORT as string,
+    username: process.env.REDIS_USERNAME as string,
+    password: process.env.REDIS_PASSWORD as string,
   }
 };
 
