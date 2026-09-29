@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { User } from "../models/user.model.js";
+import { client as redis, isRedisConnected } from "../utils/redis.js";
 import { cookieOptions } from "../config/config.js"
 import { sendVerificationEmail } from "../utils/mail.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
@@ -22,11 +23,13 @@ export const registerUser = async (req: Request, res: Response) => {
     if (!createdUser) return res.status(503).json({ success: false, message: "Failed to create user, Try again later" });
 
     // send verification email with OTP
-    const otp = await sendVerificationEmail(email, firstName);
-    if (otp) {
-      console.log(`[OTP for ${email}]:`, otp);
+    const otpRes = await sendVerificationEmail(email, firstName);
+    if (!otpRes) {
+      return res.status(400).json({ success: false, message: "Failed to send verification email" });
     }
-
+    if (isRedisConnected()) {
+      await redis.set(`otp:${email}`, otpRes, { EX: 600 }); // 10 min expiry
+    }
     const accessToken = await createdUser.generateAccessToken();
     await createdUser.save({ validateBeforeSave: false });
 
@@ -64,7 +67,8 @@ export const loginUser = async (req: Request, res: Response) => {
     }).select("+password");
     
     if (!user) return res.status(400).json({ success: false, message: "invalid credentials" });
-
+    if (!user.isVerified) return res.status(401).json({ success: false, message: "Please verify your account before login" });
+    
     // compare db stored password with user provided password
     const isPasswordCorrect = await user.isPasswordCorrect(password);
     if (!isPasswordCorrect) return res.status(400).json({ success: false, message: "invalid credentials" });
@@ -190,5 +194,24 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Error fetching current user", (err as Error)?.message);
     return res.status(500).json({ success: false, message: "Failed to fetch user details" });
+  }
+}
+
+// verify otp 
+export const verifyOTP = async (req: Request, res: Response) => {
+  try {
+    const { otp, email } = req.body;
+    if (!otp) return res.status(400).json({ success: false, message: "Please provide an otp to verify" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ success: false, message: "could not found the user" });
+    const redisOtp = await redis.get(`otp:${email}`);
+    if (!redisOtp) return res.status(503).json({ success: false, message: "service unavilable, Please try again laeter" });
+    if (redisOtp !== otp) return res.status(400).json({ success: false, message: "invalid otp" });
+    user.isVerified = true;
+    await user.save();
+    return res.status(200).json({ success: true, message: "otp verified" });
+  } catch (err) {
+    console.error("Failed to verify otp:", (err as Error)?.message);
+    return res.status(500).json({ success: false, message: "Internal server error, Try again later" });
   }
 }
