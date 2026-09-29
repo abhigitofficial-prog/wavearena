@@ -1,3 +1,11 @@
+import { string } from "zod";
+
+export type Cloudinary = {
+  cloud_name: string; 
+  api_key: string; 
+  api_secret: string;
+}
+
 export type Config = {
   port: string;
   appOrigin: string;
@@ -6,4 +14,5 @@ export type Config = {
   accessTokenExpiry: string;
   smtp_user: string;
   smtp_password: string;
+  cloudinary: Cloudinary;
 };
