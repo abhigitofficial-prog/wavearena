@@ -16,9 +16,12 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Required fields cannot  be empty" })
     }
 
-    const existingUser = await User.findOne({ email });
+    let existingUser;
+    existingUser = await User.findOne({ email });
     if (existingUser) return res.status(409).json({ success: false, message: "Another user with this email already exists" });
-
+    existingUser = await User.findOne({ userName });
+    if (existingUser) return res.status(409).json({ success: false, message: "This username is already taken, Try something else" });
+    
     const createdUser = await User.create({ firstName, lastName, userName, email, password });
     if (!createdUser) return res.status(503).json({ success: false, message: "Failed to create user, Try again later" });
 
