@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build":"tsc --showConfig && tsc",
+    "build":"tsc",
     "start": "node dist/server.js",
     "preinstall": "node scripts/enforce-registry.mjs",
     "postinstall": "node scripts/enforce-registry.mjs",

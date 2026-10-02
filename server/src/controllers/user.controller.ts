@@ -16,6 +16,10 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Required fields cannot  be empty" })
     }
 
+    const trustedEmailDomains = ["outlook", "hotmail", "gmail"];
+    const isTrusted = trustedEmailDomains.some(domain => email.toLowerCase().endsWith(`@${domain}`));
+    if (!isTrusted) return res.status(400).json({ success: false, message: "only outlook, hotmail and gmail are allowed" });
+    
     let existingUser;
     existingUser = await User.findOne({ email });
     if (existingUser) return res.status(409).json({ success: false, message: "Another user with this email already exists" });
