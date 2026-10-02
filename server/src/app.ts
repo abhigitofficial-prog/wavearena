@@ -33,4 +33,11 @@ app.get("/health", (_, res) => {
   });
 });
 
+app.get("/", (_, res) => {
+  res.status(200).json({
+    status: 200,
+    service: "wave-arena api",
+  });
+});
+
 export default app;
