@@ -26,13 +26,13 @@ export const registerUser = async (req: Request, res: Response) => {
     if (!createdUser) return res.status(503).json({ success: false, message: "Failed to create user, Try again later" });
 
     // send verification email with OTP
-    // const otpRes = await sendVerificationEmail(email, firstName);
-    // if (!otpRes) {
-    //   return res.status(400).json({ success: false, message: "Failed to send verification email" });
-    // }
-    // if (isRedisConnected()) {
-    //   await redis.set(`otp:${email}`, otpRes, { EX: 600 }); // 10 min expiry
-    // }
+    const otpRes = await sendVerificationEmail(email, firstName);
+    if (!otpRes) {
+      return res.status(400).json({ success: false, message: "Failed to send verification email" });
+    }
+    if (isRedisConnected()) {
+      await redis.set(`otp:${email}`, otpRes, { EX: 600 }); // 10 min expiry
+    }
     
     const accessToken = await createdUser.generateAccessToken();
     await createdUser.save({ validateBeforeSave: false });
@@ -71,7 +71,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }).select("+password");
     
     if (!user) return res.status(400).json({ success: false, message: "invalid credentials" });
-    // if (!user.isVerified) return res.status(401).json({ success: false, message: "Please verify your account before login" });
+    if (!user.isVerified) return res.status(401).json({ success: false, message: "Please verify your account before login" });
     
     // compare db stored password with user provided password
     const isPasswordCorrect = await user.isPasswordCorrect(password);
