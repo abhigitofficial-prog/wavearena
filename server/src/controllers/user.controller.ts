@@ -16,8 +16,9 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Required fields cannot  be empty" })
     }
 
-    const trustedEmailDomains = ["outlook", "hotmail", "gmail"];
-    const isTrusted = trustedEmailDomains.some(domain => email.toLowerCase().endsWith(`@${domain}`));
+    const trustedEmailDomains = ["outlook.com", "hotmail.com", "gmail.com"];
+    const emailDomain = email.toLowerCase().split("@")[1];
+    const isTrusted = trustedEmailDomains.includes(emailDomain);
     if (!isTrusted) return res.status(400).json({ success: false, message: "only outlook, hotmail and gmail are allowed" });
     
     let existingUser;
