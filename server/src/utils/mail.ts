@@ -7,9 +7,9 @@ if (!config.smtp_password) throw new Error("Missing SMTP_PASS inside your Enviro
 const OTP_EXPIRY_MINUTES = 10;
 
 const transporter = nodemailer.createTransport({
-  service: "Gmail",
-  // port: 465,
-  // secure: true,
+  service: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: config.smtp_user,
     pass: config.smtp_password,
