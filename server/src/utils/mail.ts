@@ -1,5 +1,10 @@
 import nodemailer from "nodemailer";
+import dns from "node:dns";
 import { config } from "../config/config.js";
+
+// Prefer IPv4 — many hosts have broken/no IPv6 routing, which causes
+// ENETUNREACH errors when smtp.gmail.com resolves to an IPv6 address.
+dns.setDefaultResultOrder("ipv4first");
 
 if (!config.smtp_user) throw new Error("Missing SMTP_USER inside your Environment Variable")
 if (!config.smtp_password) throw new Error("Missing SMTP_PASS inside your Environment Variable")
@@ -8,8 +13,9 @@ const OTP_EXPIRY_MINUTES = 10;
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
-  // port: 587,
-  // secure: false,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   auth: {
     user: config.smtp_user,
     pass: config.smtp_password,
