@@ -9,7 +9,7 @@ const appOrigin = process.env.APP_ORIGIN;
 
 // express middlewares
 app.use(cors({
-  origin: appOrigin,
+  origin: appOrigin || "*", // allow all origin for development mode
   credentials: true,
 }));
 app.use(express.json());
