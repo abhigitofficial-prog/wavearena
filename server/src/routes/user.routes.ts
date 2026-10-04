@@ -8,7 +8,8 @@ import {
   changeProfilePicture,
   getCurrentUser,
   verifyOTP,
-  resendOTP
+  resendOTP,
+  deleteUser,
 } from "../controllers/user.controller.js"
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.route("/change-profile-picture").post(verifyJWT, changeProfilePicture); /
 router.route("/me").get(verifyJWT, getCurrentUser); // get current logged in user
 router.route("/verify-user").post(verifyOTP); // verify otp
 router.route("/resend-otp").post(resendOTP); // resend otp
+router.route("/delete-user").post(verifyJWT, deleteUser); // delete an user from database
 
 export default router;
