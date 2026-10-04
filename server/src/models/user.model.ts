@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+// user model interface
 export interface IUser {
   firstName: string;
   lastName?: string;
@@ -17,24 +18,27 @@ export interface IUser {
   updatedAt: Date;
 }
 
+// injected methods interface
 export interface IUserMethods {
   isPasswordCorrect(password: string): Promise<boolean>;
   generateAccessToken(): Promise<string>;
 }
 
+// user schema
 const userSchema = new mongoose.Schema<IUser, {}, IUserMethods>({
   firstName: {
     type: String,
     trim: true,
     required: [true, "First Name is required"],
-    minlength: [3, "First Name must have at least 5 characters"],
-    maxlength: [10, "First Name can have at most 10 characters"],
+    minlength: [3, "First Name must have at least 3 characters"],
+    maxlength: [20, "First Name can have at most 20 characters"],
   },
   lastName: {
     type: String,
     trim: true,
-    minlength: [3, "Last Name must have at least 5 characters"],
-    maxlength: [10, "Last Name can have at most 10 characters"],
+    required: [true, "Last Name is required"],
+    minlength: [3, "Last Name must have at least 3 characters"],
+    maxlength: [20, "Last Name can have at most 20 characters"],
   },
   userName: {
     type: String,
