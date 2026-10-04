@@ -46,6 +46,33 @@ export const registerUser = async (req: Request, res: Response) => {
     return res.status(201).json({ success: true, message: "user created successfully" });
   } catch (err) {
     console.error("Error in user registration controller:", (err as Error)?.message);
+    return res.status(500).json({ success: false, message: (err as Error)?.message });
+  }
+}
+
+// delete an user from database
+export const deleteUser = async (req: Request, res: Response) => {
+  try{
+    const password = req.body.password;
+    if (!password || typeof password !== "string" || password.trim() === "") return res.status(400).json({
+      success: false,
+      message: "Password is required to delete account"
+    });
+    
+    const user = await User.findById(req.user?._id).select("+password");
+    if (!user) return res.status(401).json({ success: false, message: "Unauthorized" });
+    
+    const isCorrect = await user.isPasswordCorrect(password);
+    if (!isCorrect) return res.status(401).json({ success: false, message: "Incorrect password" });
+
+    const publicId = user.avatar?.publicId;
+    await User.findByIdAndDelete(user._id);
+    if (publicId) await deleteFromCloudinary(publicId);
+    
+    res.clearCookie("accessToken");
+    return res.status(200).json({ success: true, message: "user deleted" });
+  } catch(err) {
+    console.error("Error deleting user:", (err as Error)?.message);
     return res.status(500).json({ success: false, message: "internal server error, Please try again later" });
   }
 }
